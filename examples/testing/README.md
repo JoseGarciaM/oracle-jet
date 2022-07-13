@@ -63,3 +63,12 @@ Component tests should focus on the component's public interfaces rather than in
 - Don't rely exclusively on snapshot tests. Asserting HTML strings does not describe correctness. Write tests with intentionality.
 
 - If a method needs to be tested thoroughly, consider extracting it into a standalone utility function and write a dedicated unit test for it. If it cannot be extracted cleanly, it may be tested as a part of a component, integration, or end-to-end test that covers it.
+
+## Nice to have in the future
+Component testing often involves mounting the component being tested in isolation, triggering simulated user input events, and asserting on the rendered DOM output. There must be dedicated utility libraries that make these tasks simpler.
+
+- There should be a JET testing library focused on testing components without relying on implementation details. Built with accessibility in mind, its approach also makes refactoring a breeze. Its guiding principle is that the more tests resemble the way software is used, the more confidence they can provide.
+
+- We must have a JET official low-level component testing library that needs to be written to provide users access to JET specific APIs.
+
+I recommend using a npm package for testing components in applications, as its focus aligns better with the testing priorities of applications.
