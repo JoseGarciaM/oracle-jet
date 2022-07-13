@@ -1,0 +1,38 @@
+{
+  "name": "cca-sample-test",
+  "version": "1.0.0",
+  "description": "An Oracle JavaScript Extension Toolkit(JET) web app",
+  "dependencies": {
+    "@oracle/oraclejet": "http://artifactory-slc.oraclecorp.com/artifactory/ojet-dev-local/oracle-oraclejet-8.1.0.tgz"
+  },
+  "devDependencies": {
+    "@oracle/oraclejet-tooling": "http://artifactory-slc.oraclecorp.com/artifactory/ojet-dev-local/oracle-oraclejet-tooling-8.1.0.tgz",
+    "@types/chai": "^4.2.3",
+    "@types/karma-fixture": "^0.2.5",
+    "@types/mocha": "^5.2.7",
+    "@types/sinon": "^9.0.0",
+    "chai": "^4.2.0",
+    "jquery-ui": "^1.12.1",
+    "karma": "^4.3.0",
+    "karma-chai": "^0.1.0",
+    "karma-chrome-launcher": "^3.1.0",
+    "karma-coverage": "^2.0.1",
+    "karma-fixture": "^0.2.6",
+    "karma-mocha": "^1.3.0",
+    "karma-mocha-reporter": "^2.2.5",
+    "karma-requirejs": "^1.1.0",
+    "karma-sinon": "^1.0.5",
+    "karma-typescript": "^4.1.1",
+    "sinon": "^9.0.2",
+    "text": "github:requirejs/text",
+    "ts-sinon": "^1.2.0",
+    "typescript": "^3.6.4"
+  },
+  "engines": {
+    "node": ">=0.10.0"
+  },
+  "scripts": {
+    "test": "npx karma start test/karma.conf.js"
+  },
+  "private": true
+}
