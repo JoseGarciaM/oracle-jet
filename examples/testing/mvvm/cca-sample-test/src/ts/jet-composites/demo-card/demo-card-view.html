@@ -1,0 +1,39 @@
+<div tabindex="0" role="group" class="demo-card-flip-container" on-click="[[flipCard]]" on-keypress="[[flipCard]]"
+  :aria-label="[[$props.name + ' Press Enter for more info.']]">
+  <div class="demo-card-front-side">
+    <oj-bind-if test="[[$props.avatar == null]]">
+      <div class="demo-card-avatar">
+        <oj-bind-text value="[[initials]]"></oj-bind-text>
+      </div>
+    </oj-bind-if>
+    <oj-bind-if test="[[$props.avatar != null]]">
+      <img class="demo-card-avatar" :src="[[$props.avatar]]" :alt="[[$props.name]]">
+    </oj-bind-if>
+    <h2>
+      <oj-bind-text value="[[$props.name]]"></oj-bind-text>
+    </h2>
+  </div>
+
+  <div class="demo-card-back-side">
+    <div class="demo-card-inner-back-side">
+      <h2>
+        <oj-bind-text value="[[$props.name]]"></oj-bind-text>
+      </h2>
+      <h5>
+        <oj-bind-text value="[[$props.workTitle]]"></oj-bind-text>
+      </h5>
+      <oj-bind-if test="[[$props.workNumber != null]]">
+        <h5>Work</h5>
+        <a href="#">
+          <oj-bind-text value="[[workFormatted]]"></oj-bind-text>
+        </a>
+      </oj-bind-if>
+      <oj-bind-if test="[[$props.email != null]]">
+        <h5>Email</h5>
+        <a href="#">
+          <oj-bind-text value="[[$props.email]]"></oj-bind-text>
+        </a>
+      </oj-bind-if>
+    </div>
+  </div>
+</div>
