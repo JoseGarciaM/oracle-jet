@@ -14,11 +14,6 @@
 ojet restore
 ojet build
 ```
-5) Add testing dev dependencies
-
-```bash
-npm i -D @types/chai @types/karma-fixture @types/mocha @types/sinon chai karma karma-chai karma-chrome-launcher karma-coverage karma-fixture karma-mocha karma-mocha-reporter karma-requirejs karma-sinon karma-typescript sinon ts-sinon
-```
 
 ## Testing
 ```bash
