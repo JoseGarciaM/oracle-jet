@@ -3,13 +3,21 @@
   "version": "1.0.0",
   "description": "An Oracle JavaScript Extension Toolkit(JET) web app",
   "dependencies": {
-    "@oracle/oraclejet": "~12.1.0"
+    "@oracle/oraclejet": "~12.1.0",
+    "jasmine-core": "^4.2.0",
+    "karma-chrome-launcher": "^3.1.1",
+    "karma-coverage": "^2.2.0",
+    "karma-jasmine": "^5.1.0",
+    "karma-requirejs": "^1.1.0"
   },
   "devDependencies": {
+    "@oracle/oraclejet-tooling": "~12.1.0",
     "fs-extra": "^8.1.0",
     "glob": "^7.1.1",
-    "underscore": "^1.10.2",
-    "@oracle/oraclejet-tooling": "~12.1.0"
+    "karma": "^6.4.0",
+    "qunit": "^2.19.1",
+    "qunit-reporter-junit": "^1.1.1",
+    "underscore": "^1.10.2"
   },
   "engines": {
     "node": ">=12.21.0"
