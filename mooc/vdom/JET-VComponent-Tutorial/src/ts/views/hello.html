@@ -1,0 +1,108 @@
+<!--
+ Copyright (c) 2014, 2022, Oracle and/or its affiliates.
+ Licensed under The Universal Permissive License (UPL), Version 1.0
+ as shown at https://oss.oracle.com/licenses/upl/
+ -->
+<!--
+ Copyright (c) 2014, 2020, Oracle and/or its affiliates.
+ Licensed under The Universal Permissive License (UPL), Version 1.0
+ as shown at https://oss.oracle.com/licenses/upl/
+ -->
+<div class="oj-hybrid-padding">
+  <h1>Hello, World!</h1>
+  <p>
+    Let's jump in and take a look at our first VComponent:
+  </p>
+  <pre class="code">
+    <div class="filename">oj-hello-world.tsx:</div>
+    <code>
+  1    import { h, Component } from 'preact';
+  2    import { customElement, GlobalProps } from 'ojs/ojvcomponent';
+  3
+  4    @customElement('oj-hello-world')
+  5    export class HelloWorld extends Component&lt;GlobalProps&gt; {
+  6      render() {
+  7        return &lt;div&gt;Hello, World!&lt;/div&gt;;
+  8      }
+  9    }</code>
+  </pre>
+
+  <p>
+    Some points worth noting about the above code:
+  </p>
+    <ul>
+      <li>VComponents are defined as <a href="https://www.typescriptlang.org/">
+      Typescript</a> <a href="https://www.typescriptlang.org/docs/handbook/modules.html">modules</a>
+      in files with the extension ".tsx".
+      </li>
+      <li>VComponents extend the Preact Component base class (line #5), which is imported
+        directly from the preact module (line #1).
+      </li>
+      <li>All VComponents minimally support the set of global HTML attributes
+        defined by the <a href="../../../jsdocs/ojvcomponent.html#GlobalProps">GlobalProps</a>
+        type.  If the VComponent has no other component-specific properties, we use
+        GlobalProps for the Component's first type parameter (line #5)
+      </li>
+      <li>All VComponents must define a render() method (line #6).
+      </li>
+      <li>The render() method is responsible for returning a virtual DOM
+        tree that represents the VComponent content (line #7).
+      </li>
+      <li>The virtual DOM tree is expressed via <a href="https://facebook.github.io/jsx/">
+        JSX</a> elements (line #7), which is an extension to the EcmaScript/TypeScript languages for
+        embedding markup in code.
+      </li>
+      <li>The custom element tag name ('oj-hello-world') is specified via the
+        <a href="../../../jsdocs/ojvcomponent.html#customElement">@customElement</a>
+        <a href="https://www.typescriptlang.org/docs/handbook/decorators.html">decorator</a> (line #4),
+        which is imported from the <a href="../../../jsdocs/ojvcomponent.html">ojs/ojvcomponent
+        module</a> (line #2).
+      </li>
+      <li>For the moment, we manually import the virtual DOM node factory function, named "h"
+        (line #1).  At build time, JSX elements are translated into calls to this function.  (We
+        expect the requirement to manually import the h function to be removed in a future
+        release.)
+      </li>
+    </ul>
+  <p>
+    Once the VComponent has been defined, built and imported into the app, it
+    can be used like any other custom element.  For example, embedding the
+    following code in an HTML page or template (eg. index.html, or a composite
+    component or <a href="../../../jsdocs/oj.ojModule.html">
+    oj-module</a> view template):
+  </p>
+  <pre class="code">
+    <code>
+      &lt;!-- Just a plain old HTML custom element --&gt;
+      &lt;oj-hello-world&gt;&lt;/oj-hello-world&gt;</code>
+  </pre>
+  <p>
+    Results in the following output:
+  </p>
+  <p class="output">
+    <oj-hello-world></oj-hello-world>
+  </p>
+  <p>
+    One small step that we glossed over: in order for this to work,
+    the oj-hello-world.tsx module needs to be imported into the app.
+    This is accomplished by including an import of the form:
+  </p>
+  <pre class="code">
+    <code>
+      import "oj-hello-world/loader";</code>
+  </pre>
+  <p>
+    Somewhere in the app, such as in a view model.
+  </p>
+  <p>
+    If you have experience authoring JET composite components, the
+    use of a "loader" module in the above import should be
+    familiar.  We explore the role of this module in the next topic.
+  </p>
+
+  <oj-tutorial-next-topic
+    next-topic="[[nextTopic]]"
+    on-goto-contents="[[toggleDrawer]]">
+  </oj-tutorial-next-topic>
+
+</div>

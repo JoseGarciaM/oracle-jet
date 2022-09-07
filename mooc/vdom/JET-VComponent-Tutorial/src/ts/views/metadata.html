@@ -1,0 +1,121 @@
+<!--
+ Copyright (c) 2014, 2022, Oracle and/or its affiliates.
+ Licensed under The Universal Permissive License (UPL), Version 1.0
+ as shown at https://oss.oracle.com/licenses/upl/
+ -->
+<!--
+ Copyright (c) 2014, 2020, Oracle and/or its affiliates.
+ Licensed under The Universal Permissive License (UPL), Version 1.0
+ as shown at https://oss.oracle.com/licenses/upl/
+ -->
+<div class="oj-hybrid-padding">
+  <h1>Metadata</h1>
+  <p>
+    Before we get into more interesting aspects of the VComponent API,
+    we have one more background topic to cover: component metadata.  JET
+    Custom Components use metadata to express information that may be
+    helpful both for tools and consumers.  For example, Oracle Visual Builder
+    uses metadata to populate property editors and to drive other parts of the design
+    time UI.  ojet CLI uses metadata for resolving component dependencies.
+  </p>
+  <p>
+    A full list of component metadata can be found in the
+    <a href="../../../jsdocs/MetadataOverview.html">
+    JET Metadata</a> topic of the JET API documentation.
+  </p>
+  <p>
+    When authoring traditional composite components, metadata lives separately
+    from the rest of the implementation in a component.json file.  As such,
+    composite component authors typically end up having to modify three
+    source files for each new feature: the view template, the view model
+    and the component.json file.
+  </p>
+  <p>
+    With VComponents, our goal is to move closer to a single file
+    authoring experience.   Metadata is embedded directly in the
+    VComponent module, not in a separate file. The component.json
+    file is still needed to keep consuming tools happy.  However, this
+    file is generated as a side effect of the VComponent build rather
+    than hand coded.
+  </p>
+  <p>
+    Within a VComponent module, component metadata is derived from one of
+    three sources:
+  </p>
+  <ol>
+    <li>From <i>code constructs</i>.  For example, as we’ll see in the
+      <oj-tutorial-topic-link topic="[[ getTopic('props')]]">
+      </oj-tutorial-topic-link> topic, a VComponent’s
+    properties are declared as plain old type fields. "type" metadata,
+    "enumValues" metadata, etc. can all be derived from the VComponent source at build time.</li>
+    <li>From <i>TypeScript decorators</i>.  We have already seen one example of
+    this: the @customElement decorator.  This decorator plays a dual role:
+    it is used both at runtime to add custom element behavior to
+    the VComponent, but is also used at build time as a source of the
+    component’s “name” metadata.</li>
+    <li>From <i>@ojmetadata doc annotations</i>.  If not otherwise derivable, @ojmetadata doc annotations
+    can be added as a source for design time component metadata.  Documentation-based annotations should
+    never be used for metadata that impacts runtime behavior (e.g., default property values).</li>
+  </ol>
+  <p>
+    While we could introduce TypeScript decorators for describing all
+    metadata, we have decided to limit our use of decorators to
+    functionality that impacts runtime behavior.  For design time
+    metadata, such as displayName, icon, license, etc…, metadata values
+    are expressed via a documentation-based annotation rather than a real decorator.
+    The primary rationale for this decision is that decorators are only
+    valid in certain contexts (eg. on classes, methods and fields).
+    However, component authors may need to define design time metadata in other parts
+    of their code.  The annotation-based approach provides this
+    flexibility.
+  </p>
+  <p>
+    The @ojmetadata annotation takes the following form:
+  </p>
+  <pre class="code">
+    <code>
+    /**
+     * @ojmetadata &lt;metadata field name&gt; &lt;metadata value&gt;
+     */</code>
+   </pre>
+  <p>
+    For example, we can enhance our HelloWorld component with some
+    additional metadata:
+  </p>
+  <pre class="code">
+    <code>
+    /**
+     * @ojmetadata version “1.0.1”
+     * @ojmetadata description “The *best* hello world component yet.”
+     * @ojmetadata displayName “Hello World”
+     * @ojmetadata extension {
+     *    vbdt: {
+     *      someVisualBuilderDesignTimeField: true
+     *    }
+     * }
+     */
+    @customElement('oj-hello-world')
+    export class HelloWorld extends Component&lt;GlobalProps&gt; {
+    }</code>
+  </pre>
+  <p>
+    Note that each @ojmetadata annotation specifies a single name/value
+    pair.  The values are injected directly into the generated
+    component.json file, which  means that values must be valid JSON values.
+    As shown above, string values should be double-quoted.  Object, array
+    and primitive values can also be specified directly within the
+    annotation (without quotes).
+  </p>
+  <p>
+    While the above sample shows how to define component-level metadata by
+    applying the @ojmetadata annotation to the VComponent class,
+    the same technique can be used for all aspects of the VComponent API, including
+    properties, methods, events and slots.
+  </p>
+
+  <oj-tutorial-next-topic
+    next-topic="[[nextTopic]]"
+    on-goto-contents="[[toggleDrawer]]">
+  </oj-tutorial-next-topic>
+
+</div>

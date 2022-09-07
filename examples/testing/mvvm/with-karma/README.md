@@ -20,7 +20,6 @@ ojet build
 [sudo] npm install -g karma-cli
 ```
 
-```
 5) Add testing dev dependencies
 
 ```bash

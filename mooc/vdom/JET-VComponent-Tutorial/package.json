@@ -1,0 +1,23 @@
+{
+  "name": "vcomp-tutorial",
+  "version": "1.0.0",
+  "description": "An Oracle JavaScript Extension Toolkit(JET) web app",
+
+
+  "dependencies": {
+    "@oracle/oraclejet": "~13.0.0"
+  },
+  "devDependencies": {
+    "@oracle/oraclejet-tooling": "~13.0.0",
+
+    "fs-extra": "^8.1.0",
+    "glob": "^7.1.1",
+    "ts-creator": "1.2.5",
+    "typescript": "4.5.4",
+    "underscore": "^1.10.2"
+  },
+  "engines": {
+    "node": ">=0.10.0"
+  },
+  "private": true
+}

@@ -1,0 +1,129 @@
+<!--
+ Copyright (c) 2014, 2022, Oracle and/or its affiliates.
+ Licensed under The Universal Permissive License (UPL), Version 1.0
+ as shown at https://oss.oracle.com/licenses/upl/
+ -->
+<!--
+ Copyright (c) 2014, 2020, Oracle and/or its affiliates.
+ Licensed under The Universal Permissive License (UPL), Version 1.0
+ as shown at https://oss.oracle.com/licenses/upl/
+ -->
+<div class="oj-hybrid-padding">
+  <h1>Nesting</h1>
+  <p>
+    As we saw back in
+    <oj-tutorial-topic-link topic="[[ getTopic('hello')]]">
+    </oj-tutorial-topic-link>
+    custom element-based VComponents can be embedded directly in HTML.
+    This comes in handy when integrating VComponents into existing JET
+    content, including into composite components, oj-module content, or
+    Visual Builder pages.
+  </p>
+  <p>
+    In addition to being hosted within HTML, VComponents can also be nested
+    inside of other VComponents.
+  </p>
+  <p>
+    A child VComponent can be referenced by a parent in one of two forms:
+  </p>
+  <ol>
+    <li>As a custom element, using the string tag name (eg. oj-greet-hello).</li>
+    <li>As a VComponent, by referencing the Preact component class (eg. GreetHello).</li>
+  </ol>
+  <p>
+    The following sample parent component demonstrates both forms:
+  </p>
+  <pre class="code">
+    <div class="filename">oj-greet/hello-parent/hello-parent.tsx:</div>
+    <code>
+  1     import { h, Component } from 'preact';
+  2     import { customElement, GlobalProps } from 'ojs/ojvcomponent';
+  3     import { GreetHello } from 'oj-greet/hello/loader'
+  4
+  5     /**
+  6      * @ojmetadata pack "oj-greet"
+  7      * @ojmetadata dependencies {
+  8      *   "oj-greet-hello": "^1.0.0"
+  9      * }
+  10     */
+  11    @customElement('oj-greet-hello-parent')
+  12    export class GreetHelloParent extends Component&lt;GlobalProps&gt; {
+  13      render() {
+  14        return (
+  15          &lt;div&gt;
+  16            &lt;p&gt;This child is rendered as a custom element:&lt;/p&gt;
+  17            &lt;oj-greet-hello /&gt;
+  18
+  19            &lt;p&gt;This child is rendered as a VComponent:&lt;/p&gt;
+  20            &lt;GreetHello /&gt;
+  21          &lt;/div&gt;
+  22        );
+  23      }
+  24    }</code>
+  </pre>
+  <p>
+    At line 17, the GreetHello VComponent is rendered using its custom
+    element tag name.
+  </p>
+  <p>
+    At line 20, the same VComponent is rendered, this time using the
+    component class, which was imported at line #3.
+  </p>
+  <p>The resulting content is:</p>
+  <p class="output">
+    <oj-greet-hello-parent></oj-greet-hello-parent>
+  </p>
+  <p>
+    In both cases, an &lt;oj-greet-hello&gt; custom element ends up in
+    the live DOM.  The second form (specifying the VComponent class)
+    is slightly more efficient, as more of the content can be rendered
+    in virtual DOM before the live DOM is updated.  In addition, with the
+    class-based form, the resulting custom element is minimally functional:
+    it is there solely to serve (and hold the content of) the GreetHello
+    implementation.  For cases where the parent component (or the application)
+    intends to interact with the custom element in the live DOM, the first
+    form (specifying tag name) should be used.
+ </p>
+ <p>
+    As we will see in later sections, there are some other subtle usage
+    differences between the two VComponent referencing forms.  In general,
+    when authoring a parent VComponent, if a child is available as a
+    VComponent, we recommend referencing the child via its VComponent class.
+  </p>
+  <h2>Specifying Component Dependencies</h2>
+  <p>
+    In the above example, the GreetHelloParent component depends on
+    the GreetHello child component.  This dependency is specified in two
+    locations:
+  </p>
+  <ul>
+    <li>At line #3, where the GreetHello class is imported from the
+    ‘oj-greet/hello/loader’ module.</li>
+    <li>At lines #6-8, where we use the @ojmetadata annotation to specify a
+    value for the dependencies metadata field.</li>
+  </ul>
+  <p>
+    The import is a requirement in order to ensure that the
+    code compiles and that the dependency is loaded at runtime.
+  </p>
+  <p>
+    The @ojmetadata annotation is needed solely for tooling purposes.
+    ojet CLI leverages the dependencies metadata to understand relationships
+    between JET components.  Unfortunately, we do not currently have the ability
+    to infer these dependencies based on the presence of import statements.
+  </p>
+  <p>
+    In the above example, when the GreetHelloParent component is installed,
+    its dependency on the GreetHello component can be discovered by
+    examining the dependencies metadata.  Tools like ojet CLI and Visual
+    Builder will automatically inspect this metadata and ensure that any
+    dependencies (including transitive dependencies) are downloaded and
+    installed.
+  </p>
+
+  <oj-tutorial-next-topic
+    next-topic="[[nextTopic]]"
+    on-goto-contents="[[toggleDrawer]]">
+  </oj-tutorial-next-topic>
+
+</div>

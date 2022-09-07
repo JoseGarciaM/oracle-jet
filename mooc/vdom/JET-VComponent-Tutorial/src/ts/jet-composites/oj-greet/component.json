@@ -1,0 +1,26 @@
+{
+  "name": "oj-greet",
+  "version": "1.0.0",
+  "jetVersion": "^9.0.0",
+  "type": "pack",
+  "displayName": "Greeting VComponents",
+  "description": "A collection of sample greeting components that demonstrate various aspects of the VComponent API.",
+  "dependencies": {
+    "oj-greet-hello": "1.0.0",
+    "oj-greet-hello-many": "1.0.0",
+    "oj-greet-hello-many-parent": "1.0.0",
+    "oj-greet-hello-parent": "1.0.0",
+    "oj-greet-with-actions": "1.0.0",
+    "oj-greet-with-actions-parent": "1.0.0",
+    "oj-greet-with-children": "1.0.0",
+    "oj-greet-with-children-parent": "1.0.0",
+    "oj-greet-with-listeners": "1.0.0",
+    "oj-greet-with-props": "1.0.0",
+    "oj-greet-with-props-parent": "1.0.0",
+    "oj-greet-with-random-state-parent": "1.0.0",
+    "oj-greet-with-state": "1.0.0",
+    "oj-greet-with-state-parent": "1.0.0",
+    "oj-greet-with-writeback": "1.0.0",
+    "oj-greet-with-writeback-parent": "1.0.0"
+  }
+}

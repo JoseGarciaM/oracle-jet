@@ -1,0 +1,93 @@
+/*
+    Document   : override
+    Created on : <date>
+    Author     : <author>
+    Description:
+        This is where any of your application specific styles should be included
+*/
+
+.sendOffScreen {
+  position: absolute;
+  left: -10000px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+p, ul, ol {
+  font-size: 1.1em;
+  font-weight: 300;
+}
+
+.code {
+  background-color: #eee;
+  border-radius:8px;
+  color: #007;
+  font-size: 1.1em;
+  margin: 30px;
+}
+
+.filename {
+  margin: 5px 0px 0px 20px;
+}
+
+.output {
+  background-color: #e3f7fc;
+  border-radius:8px;
+  margin: 30px;
+  padding: 20px 0px 20px 20px;
+}
+
+h2 {
+  padding-top: 20px;
+}
+
+blockquote {
+  background-color: rgb(250, 249, 214);
+  padding: 20px;
+  margin: 30px;
+  border-radius:8px;
+}
+
+.centerAlignVertical {
+  display: flex;
+  align-items: center;
+}
+
+.demo-oracle-icon {
+  width:137px;
+  height:18px
+}
+
+.demo-oracle-icon:before {
+  content:url("images/oracle_logo.svg")
+}
+
+html:not([dir="rtl"]) .demo-oracle-icon {
+  padding-right:4px
+}
+
+html[dir="rtl"] .demo-oracle-icon {
+  padding-left:4px
+}
+
+.demo-oracle-icon:before {
+  display:inline
+}
+
+.demo-appheader-avatar {
+  width:24px;
+  height:24px
+}
+
+.demo-appheader-avatar:before {
+  content:url("images/avatar_24px.png")
+}
+@media (-webkit-min-device-pixel-ratio: 1.5), (min-resolution: 144dpi), (min-resolution: 1.5dppx) {
+  .demo-appheader-avatar:before {
+      content:url("images/avatar_24px_2x.png");
+      -webkit-transform:translate(-25%, -25%) scale(0.5);
+      transform:translate(-25%, -25%) scale(0.5)
+  }
+}

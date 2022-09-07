@@ -1,0 +1,311 @@
+<!--
+ Copyright (c) 2014, 2022, Oracle and/or its affiliates.
+ Licensed under The Universal Permissive License (UPL), Version 1.0
+ as shown at https://oss.oracle.com/licenses/upl/
+ -->
+<!--
+ Copyright (c) 2014, 2020, Oracle and/or its affiliates.
+ Licensed under The Universal Permissive License (UPL), Version 1.0
+ as shown at https://oss.oracle.com/licenses/upl/
+ -->
+<div class="oj-hybrid-padding">
+  <h1>Template Slots</h1>
+  <p>
+    In the previous topic we saw how to incorporate slot content into
+    custom element-based VComponents by declaring properties
+    with the Slot type.  In addition to simple,
+    non-contextual slots, JET components also support slots that receive
+    context: template slots.  Template slots are
+    typically found in collection components that iterate over a
+    data set, stamping out content for each item or row.
+    For example,
+    <a href="../../../jsdocs/oj.ojListView.html">&lt;oj-list-view&gt;</a>
+    exposes an
+    <a href="../../../jsdocs/oj.ojListView.html#itemTemplate">itemTemplate</a>
+    slot that controls how the content of each list item should be rendered.
+    Within HTML, template slots are specified using a &lt;template&gt; element
+    with a slot attribute, eg:
+  </p>
+  <pre class="code">
+    <code>
+    &lt;oj-list-view  data="[[ items ]]&gt;
+      &lt;template slot="itemTemplate" data-oj-as="item"&gt;
+        &lt;div&gt;
+          &lt;oj-bind-text value="[[item.data.value]]"&gt;&lt;/oj-bind-text&gt;
+        &lt;/div&gt;
+      &lt;/template&gt;
+    &lt;/oj-list-view&gt;</code>
+  </pre>
+  <p>
+    Custom element-based VComponents can also expose template slots.
+    To demonstrate how this works, let's consider a new flavor of greeting
+    component that takes an array of names to greet and renders a greeting
+    for each name.  The property declaration
+    might look like this:
+  </p>
+  <pre class="code">
+    <code>
+    type Props = {
+      names: Array&lt;string&gt;
+    }</code>
+  </pre>
+  <p>
+    We could just iterate over the names and render the content
+    for each item:
+  </p>
+  <pre class="code">
+    <code>
+      render(props: Props) {
+        return (
+          &lt;div&gt;
+            { props.names.map(name =&gt; &lt;div&gt;Hello, {name}!&lt;/div&gt;) }
+          &lt;/div&gt;
+        );
+      }</code>
+  </pre>
+  <p>
+    With the above approach, the decision about how to render each
+    greeting is hardcoded into the component implementation.
+    Instead, we could make this more flexible by exposing a template slot
+    that allows the app to customize the how each greeting is rendered.
+  </p>
+  <p>
+    Similar to plain old slots, template slots are declared as
+    properties with a well known type:
+    <a href="../../../jsdocs/ojvcomponent.html#TemplateSlot">TemplateSlot</a>.  Let's take a quick peek at this
+    type alias:
+  </p>
+  <pre class="code">
+    <code>
+    export type TemplateSlot&lt;Data&gt; = (data: Data) =&gt; Slot;</code>
+  </pre>
+  <p>
+    Note that TemplateSlot is a generic function type that accepts a single
+    argument: the data to use when rendering a specific instance of the
+    template.  The type of this data is defined via the Data type parameter, which must
+    be specified when TemplateSlot property is declared.
+  </p>
+  <p>
+    Here is a new version of our component that delegates
+    rendering to an optional greetingTemplate slot:
+  </p>
+  <pre class="code">
+    <div class="filename">oj-greet/hello-many.tsx:</div>
+    <code>
+  1    import { h, Component } from 'preact';
+  2    import { customElement, ExtendGlobalProps, TemplateSlot } from 'ojs/ojvcomponent';
+  3
+  4    export type GreetingContext = {
+  5      name: string;
+  6    }
+  7
+  8    type Props = {
+  9      names: Array&lt;string&gt;;
+  10      greetingTemplate?: TemplateSlot&lt;GreetingContext&gt;;
+  11    }
+  12
+  13    /**
+  14     * @ojmetadata pack "oj-greet"
+  15     */
+  16    @customElement('oj-greet-hello-many')
+  17    export class GreetHelloMany extends Component&lt;ExtendGlobalProps&lt;Props&gt;&gt; {
+  18      render() {
+  19        return (
+  20          &lt;div&gt;
+  21            {
+  22              this.props.names.map((name) =&gt; {
+  23                return this.props.greetingTemplate?.({ name }) ||
+  24                         &lt;div&gt;Hello, { name }!&lt;/div&gt;
+  25              })
+  26            }
+  27          &lt;/div&gt;
+  28        );
+  29      }
+  30    }</code>
+  </pre>
+  <p>
+    We declare the greetingTemplate slot at line 10.  Note that the
+    Data type parameter must be an object type.  We use the
+    GreetingContext type that we declared at line 4.
+  </p>
+  <p>
+    The template slot (if non-null) is invoked for each item
+    in the names array at line 23.  We pass in an object of type
+    GreetingContext with each invocation.  Alternatively, if no
+    slot is provided, we return our default content at line 24.
+  </p>
+  <h2>Providing Template Slot Content</h2>
+  <p>
+    Now that we have a component that exposes a template slot, let's take
+    a look at how to provide the slot content.  Within HTML, we
+    do this the same way we would for any JET
+    custom element: by specifying a &lt;template&gt;
+    element with a slot attribute.  Within the template element,
+    we use JET binding expressions and elements to render the desired greeting:
+  </p>
+  <pre class="code">
+    <code>
+    &lt;oj-greet-hello-many names="[[ ['Joel', 'Mike', 'Jonah' ] ]]"&gt;
+      &lt;template slot="greetingTemplate" data-oj-as="greeting"&gt;
+        &lt;div&gt;
+          Hi, &lt;oj-bind-text value="[[ greeting.name ]]"&gt;&lt;/oj-bind-text&gt;!
+        &lt;/div&gt;
+      &lt;/template&gt;
+    &lt;/oj-greet-hello-many&gt;
+    </code>
+  </pre>
+  <p>
+    This produces the following rendered output:
+  </p>
+  <p class="output">
+  <oj-greet-hello-many names="[[ ['Joel', 'Mike', 'Jonah' ] ]]">
+    <template slot="greetingTemplate" data-oj-as="greeting">
+      <div>
+        Hi, <oj-bind-text value="[[ greeting.name ]]"></oj-bind-text>!
+      </div>
+    </template>
+  </oj-greet-hello-many>
+  </p>
+  <h3>What About JSX?</h3>
+
+  <p>
+    When rendering a VComponent in JSX via its component
+    class (eg. &lt;GreetHelloMany&gt;), template slots are simply
+    passed in a functions that adhere to the TemplateSlot
+    contract.  That is, we author template slots as functions
+    that take some data, and return either a single
+    virtual DOM node or an array of nodes.
+  </p>
+  <p>
+    This might look something like:
+  </p>
+  <pre class="code">
+    <code>
+            &lt;GreetHelloMany names={names}
+              greetingTemplate={ (data) =&gt; &lt;div&gt;Hello, { data.name}!&lt;/div&gt; } /&gt;</code>
+  </pre>
+  <p>
+    Of course, we can also reference the GreetHelloMany component
+    via its custom element tag name.  How should we specify
+    template slot content for custom elements within JSX?
+  </p>
+  <p>
+    As we saw earlier, in HTML, custom element template
+    slots are specified using JET binding expressions
+    (eg. value="[[ greeting.name ]]") and
+    elements (eg. oj-bind-text) inside a &lt;template&gt;
+    element.  While this approach fits in nicely within an HTML
+    document alongside other content that is configured using JET
+    bindings, it doesn't feel quite right inside of a JSX render
+    function.  Within JSX, rather than configuring template slot
+    content using JET binding syntax, we really
+    just want to use, well... JSX.
+  </p>
+  <p>
+    In order to allow template slot content to be specified using
+    JSX-based render functions, the VComponent API introduces
+    a special, VComponent-specific property on the &lt;template&gt;
+    element: the "render" property.  The type of this property
+    is, unsurprisingly, TemplateSlot.
+  </p>
+  <p>
+    This allows us to configure template slots on custom elements
+    using JSX-based render functions, eg:
+  </p>
+  <pre class="code">
+    <code>
+            &lt;oj-greet-hello-many names={names}&gt;
+              &lt;template slot="greetingTemplate" render={ this.renderGreeting }/&gt;
+            &lt;/oj-greet-hello-many&gt;</code>
+  </pre>
+  <p>
+    Note that we still need to specify a &lt;template&gt; element with
+    a slot attribute.  Rather than
+    configuring the template slot with JET's binding syntax, we
+    instead specify a TemplateSlot function that returns virtual DOM.
+  </p>
+  <p>
+    A more complete parent component can be seen below:
+  </p>
+  <pre class="code">
+    <div class="filename">oj-greet/hello-many-parent.tsx:</div>
+    <code>
+  1     import { h, Component } from 'preact';
+  2     import { customElement, GlobalProps } from 'ojs/ojvcomponent';
+  3     import "ojs/ojavatar";
+  4     import { GreetHelloMany, GreetingContext } from 'oj-greet/hello-many/loader';
+  5
+  6     /**
+  7      * @ojmetadata pack "oj-greet"
+  8      */
+  9     @customElement('oj-greet-hello-many-parent')
+  10    export class GreetHelloManyParent extends Component&lt;GlobalProps&gt; {
+  11      render() {
+  12
+  13        const names = [ 'Joel', 'Mike', 'Jonah' ];
+  14
+  15        return (
+  16          &lt;div&gt;
+  17            &lt;p&gt;This child is rendered as a custom element:&lt;/p&gt;
+  18            &lt;oj-greet-hello-many names={names}&gt;
+  19              &lt;template slot="greetingTemplate" render={ this.renderGreeting }/&gt;
+  20           &lt;/oj-greet-hello-many&gt;
+  21           &lt;br /&gt;
+  22            &lt;p&gt;This child is rendered as a VComponent class:&lt;/p&gt;
+  23            &lt;GreetHelloMany names={names} greetingTemplate={ this.renderGreeting }/&gt;
+  24          &lt;/div&gt;
+  25        );
+  26      }
+  27
+  28      private renderGreeting(data: GreetingContext) {
+  29        const name = data.name;
+  30        const firstInitial = name.charAt(0);
+  31        const greeting = name.length &lt; 5 ? 'Hey' : 'Hi';
+  32
+  33        return (
+  34          &lt;p class="centerAlignVertical"&gt;
+  35            &lt;oj-avatar size="xxs" initials={ firstInitial } /&gt;
+  36            {greeting}, { name }!
+  37          &lt;/p&gt;
+  38        );
+  39      }
+  40    }</code>
+  </pre>
+  <p>
+    And seen in action:
+  </p>
+  <p class="output">
+    <oj-greet-hello-many-parent></oj-greet-hello-many-parent>
+  </p>
+  <p>
+    In the above example, we use the render property (at line 19) to provide
+    JSX-based content for the &lt;oj-greet-hello-many&gt; custom element, which
+    happens to be implemented as a VComponent.  However, this property
+    can also be used when configuring template slot content for any JET
+    component.  For example, we can configure the &lt;oj-list-view&gt;
+    itemTemplate slot as follows, even though this custom element is not
+    implemented as a VComponent:
+  </p>
+  <pre class="code">
+    <code>
+      render() {
+        &lt;oj-list-view  data={ this.props.items }&gt;
+          &lt;template slot="itemTemplate" render={ this.renderItem } /&gt;
+        &lt;/oj-list-view&gt;</code>
+  </pre>
+  <p>
+    One note on the template render property: you may have noticed that the above
+    samples do not use inline functions for the render prop value.  This is
+    intentional.  When specifying an inline function, a new function instance
+    is created each time the component is rendered.  While the overhead of creating
+    a new function instance is nominal, there is an undesirable side effect: the receiving
+    component (eg. the oj-list-view in the above example) will respond as if it has been
+    configured with a new template slot value.  This can trigger unnecessary, potentially
+    expensive re-rendering.  To avoid this, we stay away from inline functions for this specific
+    property.
+  </p>
+  <oj-tutorial-next-topic
+    next-topic="[[nextTopic]]"
+    on-goto-contents="[[toggleDrawer]]">
+  </oj-tutorial-next-topic>
+</div>

@@ -1,0 +1,354 @@
+<!--
+ Copyright (c) 2014, 2022, Oracle and/or its affiliates.
+ Licensed under The Universal Permissive License (UPL), Version 1.0
+ as shown at https://oss.oracle.com/licenses/upl/
+ -->
+<!--
+ Copyright (c) 2014, 2020, Oracle and/or its affiliates.
+ Licensed under The Universal Permissive License (UPL), Version 1.0
+ as shown at https://oss.oracle.com/licenses/upl/
+ -->
+<div class="oj-hybrid-padding">
+  <h1>Writeback</h1>
+  <p>
+    When working with JET custom elements, component properties can
+    be mutated in several ways.  The application can retrieve a
+    reference to the DOM element and directly set a property value.
+    Or, in applications (or composite components) that are built with
+    JET's binding layer, the property can be bound to an observable value
+    defined by a view model.  When the observed value changes, the
+    component property is updated and the component re-renders
+    accordingly.
+  </p>
+  <p>
+    In addition to these application-driven, "external" mutations,
+    component property mutations can sometimes be triggered from
+    within the component itself.  These "internal" mutations
+    typically occur in response to user interaction.  For example,
+    when the user enters a new value into an
+    <a href="../../../jsdocs/oj.ojInputText.html">
+    oj-input-text</a> custom
+    element, the component writes the user-entered value out to
+    its <a href="../../../jsdocs/oj.ojInputText.html#value">
+    value</a> property.  Similarly, when the user toggles the
+    expansion state of an
+    <a href="../../../jsdocs/oj.ojCollapsible.html">oj-collapsible</a>,
+    the component reflects the new value by mutating its
+    <a href="../../../jsdocs/oj.ojCollapsible.html#expanded">expanded</a>
+     property.
+  </p>
+  <p>
+    Properties that can be mutated from within a component itself are
+    known as
+    <a href="../../../jsdocs/CustomElementOverview.html#ce-databind-writeback-section">
+    writeback</a> properties.
+  </p>
+  <p>
+    In the traditional JET architecture, changes to writeback
+    properties are handled in one of two ways.
+    The most common technique for responding to writeback property
+    mutations is to set up a two-way binding:
+  </p>
+  <pre class="code">
+    <code>
+      &lt;oj-input-text label-hint="Edit Me" value="{{ textValue1 }}"&gt;&lt;/oj-input-text&gt;</code>
+  </pre>
+  <p>
+    Alternatively, the application can listen for property changed
+    events, eg:
+  </p>
+  <pre class="code">
+    <code>
+      &lt;oj-input-text label-hint="Edit Me Too" on-value-changed="[[ handleValueChanged ]]"&gt;&lt;/oj-input-text&gt;</code>
+  </pre>
+  <p>
+    Examples of both of these can be seen below:
+  </p>
+  <p class="output">
+    <oj-form-layout direction="row" columns="2">
+      <oj-input-text label-hint="Edit Me" value="{{ textValue1 }}"></oj-input-text>
+      <span tabindex="0">
+        The value is: <oj-bind-text value="[[ textValue1 ]]"></oj-bind-text>
+      </span>
+      <oj-input-text label-hint="Edit Me Too" on-value-changed="[[ handleValueChanged ]]"></oj-input-text>
+      <span tabindex="0">
+        The value is: <oj-bind-text value="[[ textValue2 ]]"></oj-bind-text>
+      </span>
+    </oj-form-layout>
+  </p>
+  <p>
+    When interacting with writeback properties from within a
+    VComponent, the binding-based approach is not an option.  We
+    can't set up a two-way binding expression, since VComponents do not
+    use JET's binding layer.  Instead, VComponents use the
+    event-centric approach, registering event listeners that respond
+    to property changed events.  This looks something like:
+  </p>
+  <pre class="code">
+    <code>
+      import { h, Component } from 'preact';
+      import { customElement, GlobalProps } from 'ojs/ojvcomponent';
+      import { ojInputText } from "ojs/ojinputtext";
+      import "ojs/ojinputtext";
+      import "ojs/ojformlayout";
+
+      type State = {
+        value?: string
+      }
+
+      @customElement('oj-demo-writeback')
+      export class DemoWriteback extends Component&lt;GlobalProps, State&gt; {
+
+        state = {
+          value: ""
+        };
+
+        render() {
+          return (
+            &lt;oj-form-layout&gt;
+              &lt;oj-input-text value={ this.state.value }
+                onvalueChanged={ this.handleValueChanged }
+                labelHint="And Me Too!" /&gt;
+              &lt;span tabIndex={ 0 }&gt;
+                The value is: { this.state.value }
+              &lt;/span&gt;
+            &lt;/oj-form-layout&gt;
+          );
+        }
+
+        private handleValueChanged = (event: ojInputText.valueChanged) =&gt; {
+          this.setState({
+            value: event.detail.value
+          });
+        }
+      }</code>
+  </pre>
+  <p>
+    Seen in action here:
+  </p>
+  <p class="output">
+    <oj-demo-writeback></oj-demo-writeback>
+  </p>
+  <p>
+    In the above example, we use a local state field to drive the child's
+    value property.  When the value property changes, we update our local
+    state, triggering a re-render.  On the subsequent render, we pass the
+    state value back down into the oj-input-text and also use this to
+    update our message.  For developers coming from the Preact/React
+    world, this pattern should be familiar: we are treating the
+    oj-input-text as a "controlled" component.  (For folks not familiar
+    with this pattern, see
+    <a href="https://reactjs.org/docs/forms.html#controlled-components">
+    Controlled Components</a>.)
+  </p>
+  <h2>Declaring Writeback Properties</h2>
+  <p>
+    The above example shows how to respond to writeback property
+    changes within a parent VComponent by listening for property
+    changed events.
+  </p>
+  <p>
+    It is also possible for custom element-based VComponents to
+    expose writeback properties of their own.  In order to define a
+    writeback property, the VComponent author actually declares two
+    separate properties: one for the property itself and a second
+    corresponding to the property changed listener.  As with
+    Actions, property changed listener declarations must follow some
+    specific conventions.  In particular:
+  </p>
+  <ul>
+    <li>The listener property must be named on&lt;PropertyName&gt;Changed, where
+    "PropertyName" is the upper camel cased name of the writeback property.</li>
+    <li> The listener property must be of type
+      <a href="../../../jsdocs/ojvcomponent.html#PropertyChanged">PropertyChanged</a>.</li>
+  </ul>
+  <p>
+    Building on our favorite example, if we wanted to build a greeting
+    component that reveals its message in response to some user interaction,
+    we could represent the revealed state via a writeback property, eg:
+  </p>
+  <pre class="code">
+    <code>
+    type Props = {
+      revealed?: boolean;
+      onRevealedChanged?: PropertyChanged&lt;boolean&gt;;
+    }</code>
+  </pre>
+  <p>
+    Note that the PropertyChanged type has a single
+    type parameter that corresponds to the type of the writeback
+    property.
+  </p>
+  <p>
+    With the above Props type, the resulting custom element would have a single
+    writeback property named "revealed".  When consumed within a traditional
+    JET application, either two way binding or property changed
+    listeners could be used to respond to user interaction.  Within a
+    parent VComponent, listening for revealed property changes is the
+    way to go.
+  </p>
+  <h2>Triggering Property Changes</h2>
+  <p>
+    Like Action, PropertyChanged is a
+    function type:
+  </p>
+  <pre class="code">
+    <code>
+    type PropertyChanged&lt;T&gt; = (value: T) => void;</code>
+  </pre>
+  <p>
+    The function takes a single argument: the new property value.
+  </p>
+  <p>
+    The VComponent implementation invokes the property changed callback to
+    indicate that a new value for a writeback property is available.
+    Typically this happens in response to user interaction, though the
+    VComponent can invoke this callback whenever it sees fit.
+  </p>
+  <p>
+    In the following example, we trigger the property change in response
+    to a button click:
+  </p>
+  <pre class="code">
+    <code>
+      import { h, Component } from 'preact';
+      import { customElement, ExtendGlobalProps, PropertyChanged } from 'ojs/ojvcomponent';
+      import { ojButton } from "ojs/ojbutton";
+      import "ojs/ojbutton";
+
+      type Props = {
+        revealed?: boolean;
+        onRevealedChanged?: PropertyChanged&lt;boolean&gt;;
+      }
+
+      /**
+       * @ojmetadata pack "oj-greet"
+       */
+      @customElement('oj-greet-with-writeback')
+      export class GreetWithWriteback extends Component&lt;ExtendGlobalProps&lt;Props&gt;&gt; {
+        render({ revealed }) {
+          const buttonMessage = `Click to ${revealed ? ' hide' : 'show'} your greeting!`
+
+          return (
+            &lt;div&gt;
+              &lt;oj-button onojAction={ this.handleAction }&gt;
+                { buttonMessage }
+              &lt;/oj-button&gt;
+              &lt;div&gt;
+                { revealed ? 'Hello, World!' : null }
+              &lt;/div&gt;
+            &lt;/div&gt;
+          );
+        }
+
+        private handleAction = (event: ojButton.ojAction) =&gt; {
+          this.props.onRevealedChanged?.(!this.props.revealed);
+        }
+
+        static defaultProps: Partial&lt;Props&gt; = {
+          revealed: false
+        };
+      }</code>
+  </pre>
+  <p>
+    When an  VComponent is used as a custom element (ie. referenced via
+    its custom element tag name), invoking the property changed callback
+    results in the following:
+  </p>
+  <ul>
+    <li>The new property value is set on the custom element.</li>
+    <li>A DOM property changed event is disptached.</li>
+    <li>If the custom element is being used with JET's binding layer and has a two-way binding configured, the new value is written back into the binding.</li>
+    <li>The VComponent is re-rendered with the new property value.</li>
+  </ul>
+  <p>
+    When the VComponent is referenced via its class within a parent
+    VComponent, invoking the property changed callback results in... well,
+    this simply results in callback being invoked.  There is no DOM/custom
+    element behavior in this case, and the VComponent is not automatically
+    re-rendered.
+  </p>
+  <p>
+    It is up to the parent VComponent to decide how to respond to these
+    property changes.  One typical response is to store the new property
+    value away in local state and use this to drive subsequent renders,
+    similar to the controlled component pattern that we saw above.
+  </p>
+  <p>
+    Here is a sample parent VComponent that drives our GreetWithWriteback
+    VComponent using local state:
+  </p>
+  <pre class="code">
+    <code>
+      import { h, Component } from "preact";
+      import { customElement, GlobalProps } from 'ojs/ojvcomponent';
+      import { GreetWithWriteback } from 'oj-greet/with-writeback/loader'
+
+      type State = {
+        isRevealed: boolean;
+      };
+
+      /**
+       * @ojmetadata pack "oj-greet"
+       * @ojmetadata dependencies {
+       *   "oj-greet-with-actions": "^1.0.0"
+       * }
+       */
+      @customElement('oj-greet-with-writeback-parent')
+      export class GreetWithWritebackParent extends Component&lt;GlobalProps, State&gt; {
+
+        state = {
+          isRevealed: false
+        }
+
+        render() {
+          return (
+            &lt;div&gt;
+              &lt;p&gt;This component is re-rendered in response to property changes:&lt;/p&gt;
+              &lt;GreetWithWriteback revealed={ this.state.isRevealed }
+                onRevealedChanged={ this.handleRevealedChanged } /&gt;
+            &lt;/div&gt;
+          );
+        }
+
+        private handleRevealedChanged = (newValue: boolean) =&gt; {
+          this.setState({
+            isRevealed: newValue
+          });
+        }
+      }</code>
+  </pre>
+  <p>
+    Seen in action:
+  </p>
+  <p class="output">
+    <oj-greet-with-writeback-parent></oj-greet-with-writeback-parent>
+  </p>
+  <h2>Read-only Writeback Properties</h2>
+  <p>
+    One final note:  we've explored writeback properties as properties that can be set
+    by the application upon the component, and can also be mutated within the component
+    itself.  But components can also declare <em>read-only</em> properties that can only
+    be mutated from within the component itself. For example, in addition to the
+    oj-input-text custom element's <a href="../../../jsdocs/oj.ojInputText.html#value">value</a>
+    property, it also exposes a read-only
+    <a href="../../../jsdocs/oj.ojInputText.html#rawValue">rawValue</a> property
+    that reflects the user's input as they type.
+  </p>
+  <p>
+    Whereas regular writeback properties require the VComponent author to declare two
+    separate properties, a read-only writeback property only requires the declaration of
+    a single property changed listener:
+  </p>
+  <ul>
+    <li>The listener property must be named on&lt;ReadOnlyPropertyName&gt;Changed, where
+    "ReadOnlyPropertyName" is the upper camel cased name of the read-only writeback property.</li>
+    <li> The listener property must be of type
+      <a href="../../../jsdocs/ojvcomponent.html#ReadOnlyPropertyChanged">ReadOnlyPropertyChanged</a>.</li>
+  </ul>
+  <oj-tutorial-next-topic
+    next-topic="[[nextTopic]]"
+    on-goto-contents="[[toggleDrawer]]">
+  </oj-tutorial-next-topic>
+
+</div>

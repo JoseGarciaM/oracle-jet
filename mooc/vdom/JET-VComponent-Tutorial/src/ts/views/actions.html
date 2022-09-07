@@ -1,0 +1,387 @@
+<!--
+ Copyright (c) 2014, 2022, Oracle and/or its affiliates.
+ Licensed under The Universal Permissive License (UPL), Version 1.0
+ as shown at https://oss.oracle.com/licenses/upl/
+ -->
+<!--
+ Copyright (c) 2014, 2020, Oracle and/or its affiliates.
+ Licensed under The Universal Permissive License (UPL), Version 1.0
+ as shown at https://oss.oracle.com/licenses/upl/
+ -->
+<div class="oj-hybrid-padding">
+  <h1>Actions</h1>
+  <h2>Declaring Actions</h2>
+  <p>
+    In the previous topic, we saw how VComponents can listen for DOM
+    events that are triggered in response to user interaction.  Aside
+    from the standard DOM events that are fired by the browser,
+    components need to be able to dispatch their own component-defined
+    events as well.
+  </p>
+  <p>
+    With traditional composite components, declaring and dispatching component events
+    involves multiple files: first the event API is declared via
+    component.json metadata, then event listeners are registered in the
+    view template, and finally the
+    <a href="https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent">
+    CustomEvent</a> is created and dispatched in the view model.
+  </p>
+  <p>
+    The VComponent API streamlines this process.  If you have been
+    following along the tutorial, hopefully you won't be surprised
+    to hear that with the VComponent API, component events are declared
+    via code instead of metadata.
+  </p>
+  <p>
+    Each component event is specified by declaring a field in the "Props"
+    class.  For reasons that we will dig into below, this field uses the
+    same syntax as standard event listener properties, eg.
+    "on&lt;UpperCaseEventName&gt;".
+  </p>
+  <p>
+    So, for example, if we want to add a "responseDetected" event to our
+    greeting component that gets fired in response to user interaction (eg. such
+    as a click), we would
+    declare an "onResponseDetected" field in our Props class.
+  </p>
+  <p>
+    In addition to sticking with the standard event listener property naming
+    convention, fields that correspond to component events must use a
+    specific type defined by the ojs/ojvcomponent module:
+    <a href="../../../jsdocs/ojvcomponent.html#Action">Action</a>.  Thus we end up with a
+    property declaration of the following form:
+  </p>
+  <pre class="code">
+    <code>
+    import { customElement, ExtendGlobalProps, Action } from 'ojs/ojvcomponent';
+
+    type Props = {
+      preferredGreeting?: string;
+
+      // This is an action declaration:
+      onResponseDetected?: Action;
+    }</code>
+  </pre>
+  <h2>Events vs Actions</h2>
+  <p>
+    In the above section, we have been mixing two terms: “event” and
+    “action”. Within the VComponent space, these terms have distinct
+    meanings:
+  </p>
+  <ul>
+    <li>“event” specifically refers to
+      <a href="https://developer.mozilla.org/en-US/docs/Web/Events">DOM Events</a>
+      that are dispatched via call to
+      <a href="https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/dispatchEvent">dispatchEvent</a>.</li>
+    <li>“action” is a higher-level abstraction for event-like APIs, which may
+      or may not actually involve dispatching an Event at the DOM level.</li>
+  </ul>
+  <p>
+    This distinction arises due to the fact that, as discussed in the
+    <oj-tutorial-topic-link topic="[[ getTopic('nesting')]]">
+    </oj-tutorial-topic-link>
+     topic, VComponents can be used in two ways:
+  </p>
+  <ol>
+    <li>As a custom element, using the string tag name.</li>
+    <li>As a VComponent, using the component class.</li>
+  </ol>
+  <p>
+    When a VComponent is used as a custom element, invoking an action
+    does in fact result in a DOM event being dispatched.
+  </p>
+  <p>
+    However, when referencing a VComponent via its VComponent class,
+    no DOM event is created or dispatched.
+    Instead, the action callback provided by the parent VComponent is
+    invoked directly.
+  </p>
+  <p>
+    In order to support these two different usage models, we need a
+    higher level abstraction than DOM events.  VComponent actions
+    provide that abstraction.
+  </p>
+  <p>
+    From here on out, we will stick with the term “action” when referring
+    to the general behavior by which VComponents notify the outside world of
+    activity.  We will use the term “event” specifically for cases when we
+    need to refer to DOM events that are dispatched by custom (or plain old
+    HTML) elements.
+  </p>
+  <h2>Dispatching Actions</h2>
+    <p>
+      Okay, so we have seen how to declare actions.  But how do we dispatch them?
+    </p>
+    <p>
+      The Action type is just a callback function type:
+    </p>
+    <pre class="code">
+      <code>
+        export type Action&lt;Detail extends object = {}&gt; = (detail?: Detail) =&gt; void;</code>
+    </pre>
+    <p>
+      In order to dispatch an action, the component simply invokes the
+      Action-typed property as a function.
+    </p>
+    <p>
+      Actions are typically dispatched in response to some underlying event.  For
+      example, our greeting component might dispatch the responseDetected action
+      in response to a click:
+    </p>
+    <pre class="code">
+      <code>
+        private _handleClick = (event: MouseEvent) =&gt; {
+          this.props.onResponseDetected?.();
+        }</code>
+    </pre>
+    <p>
+      Note that the consumer of this component is not required to provide a
+      value for onResponseDetected.  As such, we need to guard against a
+      null this.props.onResponseDetected value.  Just as we did with slots, we
+      can take advantage of TypeScript's support for the
+      <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Optional_chaining">
+      optional chaining operator</a> (?.).  This allows us to invoke the action
+      callback if it is provided but short-circuit if not, without the need for
+      a more verbose null check.
+    </p>
+  <h2>Responding to Actions</h2>
+  <p>
+    When an action is invoked, one of two things happens, depending on
+    the usage.
+  </p>
+  <p>
+    If the VComponent is being used as a custom element (either within
+    an HTML document or within JSX in a parent VComponent), the
+    VComponent framework creates an actual DOM CustomEvent and
+    dispatches it via the custom element.  The
+    <a href="https://developer.mozilla.org/en-US/docs/Web/API/Event/type">event type</a>
+    is derived from the name of the action property by removing the "on" prefix
+    and lower casing the first letter.  So, invoking the "onResponseDetected"
+    action results in a DOM event type of "responseDetected" being dispatched.
+  </p>
+  <p>
+    If the VComponent is being used by a parent VComponent and is
+    referenced by its class rather than the custom element
+    name, no DOM event is created.  If the parent provides a
+    value for the action property, this is invoked directly.
+  </p>
+  <p>
+    In JSX markup, action callbacks are always
+    specified using the action property name.  This is true regardless
+    of whether the parent references the child VComponent by its
+    custom element name of class:
+  </p>
+  <pre class="code">
+    <code>
+      &lt;p&gt;This child is rendered as a custom element:&lt;/p&gt;
+      &lt;oj-greet-with-actions onresponseDetected={this.handleResponse}/&gt;
+
+      &lt;p&gt;This child is rendered as a VComponent class:&lt;/p&gt;
+      &lt;GreetWithActions onResponseDetected={this.handleResponse}/&gt;</code>
+  </pre>
+  <p>
+    However, if the custom element lives within an HTML document, event
+    listeners are typically registered with JET's
+    <a href="../../../jsdocs/CustomElementOverview.html#toc21">event binding syntax</a>.
+    This might look something like:
+  </p>
+  <pre class="code">
+    <code>
+      &lt;oj-greet-with-actions
+        on-response-detected="[[ expressionPointingToEventHandler ]]"&gt;
+      &lt;/oj-greet-with-actions&gt;
+    </code></pre>
+  <p>
+    Though it is also possible to call the DOM
+    <a href="https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener">
+      addEventListener</a> API directly.
+  </p>
+  <h2>Action Payloads</h2>
+  <p>
+    You may have noticed that Action is a generic type with a
+    "Detail" type parameter, though we have not taken advantage of this
+    yet.  The Detail type parameter comes in handy when the action needs
+    to deliver additional information beyond just the action type.
+  </p>
+  <p>
+    For example, our greeting component may want to include a flag along
+    with the responseDetected action to indicate urgency.  This would be
+    declared using the Detail type parameter as follows:
+  </p>
+  <pre class="code">
+    <code>
+  type Props = {
+    preferredGreeting?: string;
+    onResponseDetected?: Action&lt;{
+      urgent: boolean;
+    }&gt;;
+  }</code>
+  </pre>
+  <p>
+    When invoking the action, the detail payload is passed in as an
+    argument to the action callback, eg:
+  </p>
+  <pre class="code">
+    <code>
+      private _handleClick = (event: MouseEvent) =&gt; {
+        // Pass in a detail payload.  Determine urgency based on
+        // number of clicks.
+        this.props.onResponseDetected?.({
+          urgent: event.detail &gt; 1
+        });
+      }</code>
+  </pre>
+  <p>
+    The Detail type parameter can also be specified using a type alias,
+    eg:
+  </p>
+  <pre class="code">
+    <code>
+  export type ResponseDetectedDetail = {
+    urgent: boolean;
+  }
+
+  type Props = {
+    preferredGreeting?: string = 'Hello';
+    onResponseDetected?: Action&lt;ResponseDetectedDetail&gt;
+  }</code>
+  </pre>
+  <p>
+    On the consuming side, there is one subtlely in how the detail
+    payloads are accessed.
+  </p>
+  <p>
+    In the custom element case, the action callback is literally
+    registered as a DOM
+    <a href="https://developer.mozilla.org/en-US/docs/Web/API/EventListener">
+    EventListener.</a> That is, when using this form:
+  </p>
+  <pre class="code">
+    <code>
+          &lt;oj-greet-with-actions onresponseDetected={this.handleEventResponse}/&gt;</code>
+  </pre>
+  <p>
+    The callback acts as a true DOM event listener, and as such will receive a
+    single "event" argument of type CustomEvent&lt;Detail&gt;.
+  </p>
+  <p>
+    However, when using the VComponent class form:
+  </p>
+  <pre class="code">
+    <code>
+      &lt;GreetWithActions onResponseDetected={this.handleActionResponse}/&gt;</code>
+  </pre>
+  <p>
+    The callback will again receive a single argument, but of type Detail
+    rather than CustomEvent&lt;Detail&gt;.
+  </p>
+  <p>
+    The difference between custom element usage and VComponent class usage
+    is admittedly non-obvious.  Our recommendation for VComponent authors
+    is to leverage the VComponent class form when that is available.
+  </p>
+  <h2>All Together Now</h2>
+  <p>
+    Putting it all together, our greeting component ends up as:
+  </p>
+  <pre class="code">
+    <div class="filename">oj-greet/with-actions/with-actions.tsx:</div>
+    <code>
+    import { h, Component } from 'preact';
+    import { customElement, ExtendGlobalProps, Action } from 'ojs/ojvcomponent';
+
+    export type ResponseDetectedDetail = {
+      urgent: boolean;
+    }
+
+    type Props = {
+      preferredGreeting?: string;
+      onResponseDetected?: Action&lt;ResponseDetectedDetail&gt;;
+    }
+
+    /**
+     * @ojmetadata pack "oj-greet"
+     */
+    @customElement('oj-greet-with-actions')
+    export class GreetWithActions extends Component&lt;ExtendGlobalProps&lt;Props&gt;&gt; {
+      render(props: Props) {
+        return (
+          &lt;div onClick={this._handleClick}&gt;
+            &lt;p&gt;{props.preferredGreeting}, World!&lt;/p&gt;
+          &lt;/div&gt;
+        );
+      }
+
+      private _handleClick = (event: MouseEvent) =&gt; {
+        // Pass in a detail payload.  Determine urgency based on
+        // number of clicks.
+        this.props.onResponseDetected?.({
+          urgent: event.detail &gt; 1
+        });
+      }
+
+      static defaultProps: Partial&lt;Props&gt; = {
+        preferredGreeting: "Hello"
+      };
+    }</code>
+      </pre>
+  <p>
+    And our parent component is:
+  </p>
+  <pre class="code">
+    <div class="filename">oj-greet/with-actions-parent/with-actions-parent.tsx:</div>
+    <code>
+    import { h, Component } from 'preact';
+    import { customElement, GlobalProps, Action } from 'ojs/ojvcomponent';
+    import { GreetWithActions, ResponseDetectedDetail } from 'oj-greet/with-actions/loader';
+
+    /**
+     * @ojmetadata pack "oj-greet"
+     * @ojmetadata dependencies {
+     *   "oj-greet-with-actions": "^1.0.0"
+     * }
+     */
+    @customElement('oj-greet-with-actions-parent')
+    export class GreetWithActionsParent extends Component&lt;GlobalProps&gt; {
+      render() {
+        return (
+          &lt;div&gt;
+            &lt;p&gt;This child is rendered as a custom element:&lt;/p&gt;
+            &lt;oj-greet-with-actions onresponseDetected={this.handleEventResponse}/&gt;
+
+            &lt;p&gt;This child is rendered as a VComponent class:&lt;/p&gt;
+            &lt;GreetWithActions onResponseDetected={this.handleActionResponse}/&gt;
+          &lt;/div&gt;
+        );
+      }
+
+      private handleEventResponse = (event: CustomEvent&lt;ResponseDetectedDetail&gt;) =&gt; {
+        this.logResponseDetected(event.detail.urgent);
+      }
+
+      private handleActionResponse = (detail: ResponseDetectedDetail) =&gt; {
+        this.logResponseDetected(detail.urgent);
+      }
+
+      private logResponseDetected(urgent: boolean) {
+        const responseType = urgent ? 'Urgent' : 'Non-urgent';
+        console.log(`${responseType} response detected.`);
+      }
+    }</code>
+  </pre>
+  <p>
+    Which can be seen in "action" here:
+  </p>
+  <p class="output">
+    <oj-greet-with-actions-parent></oj-greet-with-actions-parent>
+  </p>
+  <p>
+    (Check the browser console for the logged output.)
+  </p>
+
+  <oj-tutorial-next-topic
+    next-topic="[[nextTopic]]"
+    on-goto-contents="[[toggleDrawer]]">
+  </oj-tutorial-next-topic>
+
+</div>

@@ -1,0 +1,97 @@
+<!--
+ Copyright (c) 2014, 2022, Oracle and/or its affiliates.
+ Licensed under The Universal Permissive License (UPL), Version 1.0
+ as shown at https://oss.oracle.com/licenses/upl/
+ -->
+<!--
+ Copyright (c) 2014, 2020, Oracle and/or its affiliates.
+ Licensed under The Universal Permissive License (UPL), Version 1.0
+ as shown at https://oss.oracle.com/licenses/upl/
+ -->
+<div class="oj-hybrid-padding">
+  <h1>The Loader Module</h1>
+  <p>
+    In the previous section, in order to import the oj-hello-world.tsx module,
+    we referenced a module named "loader" rather than importing the "oj-hello-world"
+    module directly.  For developers with experience building JET composite components,
+    the loader module should already be familiar.  In the Composite Component
+    Architecture, the loader module serves three purposes.  This module:
+  </p>
+    <ol>
+      <li>Loads the composite component's resources (eg. component.json,
+        view template, view model, css)</li>
+      <li>Registers the component with JET, by calling
+        <a href="../../../jsdocs/Composite.html#register">
+          Composite.register</a></li>
+      <li>Serves as the main entry point into the composite component.  (This
+        is what imports point to.)</li>
+    </ol>
+  <p>
+    For more details on the use of the loader module within composite components, see
+     <a href="https://blogs.oracle.com/groundside/jet-composite-components-ii-the-basics">
+    JET Custom Components II - The Basics</a> in Duncan Mills'
+    <a href="https://blogs.oracle.com/groundside/cca">JET Custom Component Series</a>.
+    In particular, look for "Step 5 - Examine the Component
+    Bootstrap / Loader Script".
+  </p>
+  <p>
+    One of the goals of the VComponent API is to provide a single file
+    component authoring experience.  We are not totally there yet, as
+    the component's css content lives in a separate file.  However, there
+    is no need to create separate view template, view model or metadata
+    files.  Instead:
+  </p>
+  <ul>
+    <li>View templates are replaced by the render method.</li>
+    <li>View models are replaced by component logic.</li>
+    <li>Metadata lives within the component code,
+      through a combination of code constructs, type information,
+      decorators and doc annotations.
+    </li>
+  </ul>
+  <p>
+    In addition, there is no need for an explicit registration call (ie.
+    no need for #2), as the presence of the @customElement decorator is
+    sufficient to bring the VComponent to life.
+  </p>
+  <p>
+    Given that we don't need to do any special resource loading or
+    registration with VComponents, why do we bother with a loader module?
+  </p>
+  <p>
+    The good news is: loader modules are in no way a fundamental part
+    of the VComponent API.  There is no long term requirement for these
+    modules.  However, in the short term, there are several tools which
+    rely on the Composite Component Architecture convention of having a
+    module named "loader" serve as the main entry point for the
+    component, including ojet CLI and Visual Builder
+  </p>
+  <p>
+    For now, in order to allow VComponents to work
+    properly with these tools, we are sticking with the composite
+    component convention of having a separate loader module for
+    each component. Our goal is to remove this requirement in a future JET
+    release.
+  </p>
+  <p>
+    So if we aren't actually loading resources or calling registration
+    functions, what are we doing in VComponent loader modules?
+    Not a whole lot.  Loader modules simply re-export the VComponent
+    module class.  For example, the loader module for the HelloWorld
+    component is simply:
+  </p>
+  <pre class="code">
+    <code>
+      export { HelloWorld } from  "./oj-hello-world";</code>
+  </pre>
+  <p>
+    We will see examples of how this (re-)exported class may be used when
+    authoring parent VComponents in later topics.
+  </p>
+
+  <oj-tutorial-next-topic
+    next-topic="[[nextTopic]]"
+    on-goto-contents="[[toggleDrawer]]">
+  </oj-tutorial-next-topic>
+
+</div>

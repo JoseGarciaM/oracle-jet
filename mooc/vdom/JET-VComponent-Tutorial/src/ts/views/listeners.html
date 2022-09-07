@@ -1,0 +1,119 @@
+<!--
+ Copyright (c) 2014, 2022, Oracle and/or its affiliates.
+ Licensed under The Universal Permissive License (UPL), Version 1.0
+ as shown at https://oss.oracle.com/licenses/upl/
+ -->
+<!--
+ Copyright (c) 2014, 2020, Oracle and/or its affiliates.
+ Licensed under The Universal Permissive License (UPL), Version 1.0
+ as shown at https://oss.oracle.com/licenses/upl/
+ -->
+<div class="oj-hybrid-padding">
+  <h1>Listeners</h1>
+  <p>
+    Now that we know how to define component properties and children/slots,
+    things are getting a bit more interesting.  Though we are still missing a
+    key feature that will be central to most components: listening
+    for and responding to events.
+  </p>
+  <p>
+    In Preact, when listening for standard HTML events such as "click",
+    listeners can be specified via properties of the form:
+    on&lt;UpperCaseStandardEventName&gt;.
+  </p>
+  <p>
+    So, for example, the following snippet shows how to register a
+    "click" event listener:
+  </p>
+  <pre class="code">
+    <code>
+    render() {
+      return &lt;div onClick={this._handleClick}&gt;Click Me!&lt;/div&gt;
+    }</code>
+  </pre>
+  <p>
+    Unfortunately, this naming convention does not apply to listeners
+    for custom events, such as &lt;oj-button&gt;'s "ojAction" event.
+    Instead, when registering event listeners for custom events on
+    custom elements, the following convention is used: on&lt;customEventName&gt;
+  </p>
+  <p>
+    The folowing sample shows how to register a listener for the "ojAction" event:
+  </p>
+  <pre class="code">
+    <code>
+    protected render() {
+      return &lt;oj-button onojAction={this._handleAction}&gt;Click Me!&lt;oj-button&gt;
+    }</code>
+  </pre>
+  <p>
+    Note that, unlike the standard "click" event case, with custom events the actual
+    event type appears directly after the "on" prefix.  The first character of
+    the custom event name is not upper cased.
+  </p>
+  <p>
+    Event listeners
+    are functions which take a DOM
+    <a href="https://developer.mozilla.org/en-US/docs/Web/API/Event">Event</a>
+    and have no return value.
+  </p>
+  <p>
+    In many cases, event listeners will need access to the VComponent
+    instance.  There are various ways to accomplish this, including:
+  </p>
+  <ul>
+    <li>An arrow function can be defined and used inline in the render method.</li>
+    <li>A class method can be bound and saved away in the constructor.</li>
+    <li>An arrow function can be declared and stored in a class field.</li>
+  </ul>
+  <p>
+    The latter two approaches have an advantage of the first option: they avoid
+    re-creating a new function on each call to render().  By re-using the same
+    function instance across all renders, these approaches
+    avoid triggering unnecessary virtual DOM diffs.
+  </p>
+  <p>
+    We typically use the class field approach, as it is slightly more concise.
+    This is shown at line 20 below:
+  </p>
+  <pre class="code">
+    <div class="filename">oj-greet/with-listeners/with-listeners.tsx:</div>
+    <code>
+  1    import { h, Component } from 'preact';
+  2    import { customElement, GlobalProps } from 'ojs/ojvcomponent';
+  3
+  4    /**
+  5     * @ojmetadata pack "oj-greet"
+  6     */
+  7    @customElement('oj-greet-with-listeners')
+  8    export class GreetWithListeners extends Component&lt;GlobalProps&gt; {
+  9      render() {
+  10        return (
+  11          &lt;div&gt;
+  12            &lt;div onClick={this._handleEvent}&gt;
+  13              &lt;p&gt;Hello, World!&lt;/p&gt;
+  14            &lt;/div&gt;
+  15            &lt;oj-button onojAction={this._handleEvent}&gt;Click Me&lt;/oj-button&gt;
+  16          &lt;/div&gt;
+  17        );
+  18      }
+  19
+  20      private _handleEvent = (event: Event) =&gt; {
+  21        console.log(`Received ${event.type} event`)
+  22      }
+  23    }</code>
+   </pre>
+  <p>A custom element instance of our GreetWithListeners VComponent can be found here:</p>
+  <div class="output">
+    <oj-greet-with-listeners></oj-greet-with-listeners>
+  </div>
+  <p>
+    Try clicking on it and look for the output in the browser console.
+  </p>
+
+  <oj-tutorial-next-topic
+    next-topic="[[nextTopic]]"
+    on-goto-contents="[[toggleDrawer]]">
+  </oj-tutorial-next-topic>
+
+</div>

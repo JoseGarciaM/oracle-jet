@@ -1,0 +1,1 @@
+export { GreetHelloManyParent } from  "./hello-many-parent";

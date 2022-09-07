@@ -1,0 +1,503 @@
+<!--
+ Copyright (c) 2014, 2022, Oracle and/or its affiliates.
+ Licensed under The Universal Permissive License (UPL), Version 1.0
+ as shown at https://oss.oracle.com/licenses/upl/
+ -->
+<!--
+ Copyright (c) 2014, 2020, Oracle and/or its affiliates.
+ Licensed under The Universal Permissive License (UPL), Version 1.0
+ as shown at https://oss.oracle.com/licenses/upl/
+ -->
+<div class="oj-hybrid-padding">
+  <h1>State</h1>
+  <p>
+    So far, the VComponents that we have seen determine what content to
+    render based exclusively on properties that are passed into the
+    component by the parent.  Components that are fully controlled by the
+    parent component are a very common case.  However, some components may
+    require their own internal, render-influencing state that is not
+    passed in, but rather lives locally in the component.  VComponent authors
+    can leverage Preact's local state mechanism for these cases.
+  </p>
+  <h2>Declaring State</h2>
+  <p>
+    The process of declaring local state fields is very similar to the way
+    that we define VComponent properties.  In both cases, we start by
+    declaring a type.
+  </p>
+  <p>
+    To see how this works, let's strain our little greeting
+    component a bit further.  In addition to rendering a greeting, we will
+    update our component such that it responds to clicks by displaying a goodbye
+    message, ending the conversation.  We'll use a boolean local state
+    field to track whether we have reached this "done" state.
+  </p>
+  <p>
+    Our greeting component state would be declared as:
+  </p>
+  <pre class="code">
+    <code>
+    type State = {
+      done: boolean;
+
+      // Other state fields go here
+    };</code>
+  </pre>
+  <p>
+    As with the properties type, we associate the state type with
+    the VComponent implementation by leveraging generics.  The
+    Preact component class exposes two type parameters:
+  </p>
+  <ul>
+    <li>P: the first type parameter specifies the properties type</li>
+    <li>S: the second type parameter specifies the state type</li>
+  </ul>
+  <p>
+    Our new declaration with both type parameters looks like this:
+  </p>
+  <pre class="code">
+    <code>
+    export class GreetWithState extends Component&lt;ExtendGlobalProps&lt;Props&gt;, State&gt; {
+    }</code>
+  </pre>
+  <p>
+    Each VComponent has access to the local state via the this.state field.
+    This field must be initialized at construction time.  Initialization
+    can be done in one of two ways.
+  </p>
+  <p>
+    If your VComponent subclass has a constructor, local state
+    can be initialized there:
+  </p>
+  <pre class="code">
+    <code>
+    export class GreetWithState extends Component&lt;ExtendGlobalProps&lt;Props&gt;, State&gt; {
+      constructor() {
+        this.state = {
+          done: false
+        };
+
+        // Do other construction-time work here
+      }
+    }</code>
+  </pre>
+  <p>
+    TypeScript also supports inline initialization of class
+    fields.  This slightly more compact form works well if you do not
+    otherwise need a constructor:
+  </p>
+  <pre class="code">
+    <code>
+    export class GreetWithState extends Component&lt;ExtendGlobalProps&lt;Props&gt;, State&gt; {
+      state = {
+        done: false
+      };
+
+      // Component implementation goes here
+    }</code>
+  </pre>
+  <p>
+    Once local state has been declared and initialized, it can be
+    referenced from within the render method to adjust how the
+    virtual DOM content is rendered.  Like this.props, the this.state
+    value is passed into render() as a convenience.
+  </p>
+  <p>
+    Let's tweak our greeting component to render a different message when the
+    conversation is "done":
+  </p>
+  <pre class="code">
+    <code>
+      render(props: Props, state: State) {
+        // Derive greeting message off of the "done" state field
+
+        const greeting = state.done ?
+          'Goodbye' :
+          props.preferredGreeting;
+
+        return (
+          &lt;div onClick={this._handleClick}&gt;
+            &lt;p&gt;{greeting}, World!&lt;/p&gt;
+          &lt;/div&gt;
+        );
+      }</code>
+  </pre>
+  <h2>Updating State</h2>
+  <p>
+    One thing that makes local state fields interesting is what happens
+    when they are updated.  Updating local state has an important side
+    effect: it triggers re-rendering of the component.
+  </p>
+  <p>
+    Note that this.state is declared as a Readonly type.  Other than the
+    initial assignment to this.state in the constructor (or class field
+    initialization), neither this.state nor fields on this.state should be
+    mutated directly.
+  </p>
+  <p>
+    Instead, state updates are performed by calling the Preact Component's
+    setState method.  This method has two forms.
+    The first form simply takes an object
+    representing the new state.  For example, we can update our "done" state
+    field by calling:
+  </p>
+  <pre class="code">
+    <code>
+      this.setState({ done: true });</code>
+  </pre>
+  <p>
+    This call will queue the state update, which will trigger an (asynchronous)
+    re-render of the component with the new state.
+  </p>
+  <p>
+    Although our sample only has a single state field, components can
+    have an arbitrary number of fields.  setState() accepts sparsely
+    populated objects - ie. you are not required to provide values for all
+    state fields.  Any new values that are provided will be merged on
+    top of the current state.
+  </p>
+  <p>
+    One potential problem with the object-based form of setState() arises
+    when the new value for a state field is derived from the previous value.
+    Given the asynchronous nature of this method, simply inspecting
+    the current state may not be sufficient to determine what the next
+    value should be.  If there is an outstanding call to setState() that has
+    not yet been fully processed, this.state might not reflect the pending
+    update.
+  </p>
+  <p>
+    To better support cases where a state field's next value is dependent
+    on the previous value, setState() supports a callback form.
+    Rather than passing in an object representing the new state, callers
+    pass in a function that takes two arguments: the "current" state and
+    properties.  This callback function can inspect the state and props and
+    return one of the following values:
+  </p>
+  <ul>
+    <li>A sparsely populated object representing any state
+      updates to apply.  Or...</li>
+    <li>null, if no state updates are required</li>
+  </ul>
+  <p>
+    When multiple calls to setState() are issued, the state updates
+    are chained.  That is, the results of one call (whether object or
+    callback form) are fed into the the subsequent callback.  That way,
+    the callback always sees the most up to date values, and can use this
+    information to correctly produce the next value.
+  </p>
+  <p>
+    The below version of our greeting component has been modified to use
+    a numeric, enum-based counter to track how engaging the interaction with
+    the end user is.  After three clicks, the greeting component grows
+    sufficiently uninterested to put an end to the conversation.
+  </p>
+  <pre class="code">
+    <div class="filename">oj-greet/with-state/with-state.tsx:</div>
+    <code>
+      import { h, Component } from 'preact';
+      import { customElement, ExtendGlobalProps } from 'ojs/ojvcomponent';
+
+      type Props = {
+        preferredGreeting?: string;
+      }
+
+      enum EngagementLevel {
+        Interested,
+        Bored,
+        Impatient,
+        Done
+      }
+
+      type State = {
+        engagement: EngagementLevel;
+      };
+
+      /**
+       * @ojmetadata pack "oj-greet"
+       */
+      @customElement('oj-greet-with-state')
+      export class GreetWithState extends Component&lt;ExtendGlobalProps&lt;Props&gt;, State&gt; {
+
+        state = {
+          engagement: EngagementLevel.Interested
+        }
+
+        render() {
+          const greeting = this.getGreeting();
+
+          return (
+            &lt;div onClick={this._handleClick}&gt;
+              &lt;p&gt;{greeting}, World!&lt;/p&gt;
+            &lt;/div&gt;
+          );
+        }
+
+        private getGreeting() {
+          let greeting;
+
+          switch(this.state.engagement) {
+            case EngagementLevel.Bored:
+              greeting = "Okay";
+              break;
+            case EngagementLevel.Impatient:
+              greeting = "Whatever";
+              break;
+            case EngagementLevel.Done:
+              greeting = "Later";
+              break;
+            default:
+              greeting = this.props.preferredGreeting;
+              break;
+          }
+
+          return greeting;
+        }
+
+        private _handleClick = (event: MouseEvent) =&gt; {
+          this.setState((state: Readonly&lt;State&gt;) =&gt; {
+            // Once we have reached the Done state, we return null
+            // to indicate that no state update is needed.
+            return state.engagement === EngagementLevel.Done ?
+              null :
+              { engagement: state.engagement + 1 };
+          });
+        }
+
+        static defaultProps: Partial&lt;Props&gt; = {
+          preferredGreeting: "Hello"
+        };
+      }</code>
+  </pre>
+  <p>
+    For a fascinating conversation, try clicking the &lt;oj-greet-with-state&gt;
+    custom element below:
+  </p>
+  <p class="output">
+    <oj-greet-with-state></oj-greet-with-state>
+  </p>
+  <h2>Finding the Right Home for State</h2>
+  <p>
+    In order to demonstrate the local state APIs, we took a plain old
+    stateless component and injected a bit of local state.  The result is an
+    interactive component that updates itself in response to user interaction
+    (clicks).
+  </p>
+  <p>
+    While local state is a powerful tool that makes it easy to introduce
+    interactive behaviors into otherwise static components, there are some
+    drawbacks to relying on local state.  Introducing local
+    state tends to make components more complicated.  This can make it more
+    difficult for developers to reason about the behavior of the component,
+    particularly when multiple pieces of state are involved.  It also makes
+    testing more challenging, since ideally tests should cover all possible
+    combinations of states.
+  </p>
+  <p>
+    One other issue is that introducing local state can limit the flexibility
+    of the component.  Local state is, well, local.  This means that, unlike
+    with properties, parent components have no control over the stateful
+    aspects of a child component.  By encoding specific stateful behaviors
+    directly into the child component, we limit the use cases for which that
+    component may be viable.
+  </p>
+  <p>
+    For example, in our GreetWithState component, we made a decision that
+    after three clicks, the conversation should be forever terminated.
+    If we want to use the (admittedly not very interesting) presentational
+    aspects of this component, but with slightly different behavior, we're
+    out luck.  If in some other part of the app, we would like to add a new
+    engagement level in between Interested and Bored, we're stuck either
+    hacking on GreetWithState component to support different modes, or
+    writing a second version of this component.
+  </p>
+  <p>
+    We can reduce complexity and increase flexibility by breaking apart
+    stateless presentation from stateful behaviors and delivering these
+    as two separate components.
+  </p>
+  <p>
+    The stateless, presentational component would have the following characteristics:
+  </p>
+  <ul>
+    <li>The component is controlled by properties that are passed
+    in by the parent.</li>
+    <li>Rather than responding to user interaction with local state updates,
+    the component dispatches actions and lets the parent decide how to
+    respond.</li>
+  </ul>
+  <p>
+    A typical response from a stateful parent component would be to update
+    its own local state, triggering a re-render on itself.  As part of the
+    re-render, the parent could render the child with new state-driven
+    property values.
+  </p>
+  <h2>Controlled Greeting</h2>
+  <p>
+    Conveniently, we have already seen a stateless, presentational version
+    of our greeting component.  Back in the
+    <oj-tutorial-topic-link topic="[[ getTopic('actions')]]">
+    </oj-tutorial-topic-link> topic
+    we explored the GreetWithActions component, which has the following design:
+  </p>
+  <ul>
+    <li>The greeting message is passed in from the parent via the preferredGreeting
+      prop.</li>
+    <li>A responseDetected action is fired in response to user interaction.</li>
+    <li>There is no local state.</li>
+  </ul>
+  <p>
+    We can easily refactor the stateful behavior out of our GreetWithState
+    component and lift this up to a new parent component.  This might
+    look something like:
+  </p>
+  <pre class="code">
+    <div class="filename">oj-greet/with-state-parent/with-state-parent.tsx:</div>
+    <code>
+      import { h, Component } from 'preact';
+      import { customElement, GlobalProps } from 'ojs/ojvcomponent';
+      import { GreetWithActions } from 'oj-greet/with-actions/loader'
+
+      enum EngagementLevel {
+        Interested,
+        Bored,
+        Impatient,
+        Done
+      }
+
+      type State = {
+        engagement: EngagementLevel;
+      };
+
+      /**
+       * @ojmetadata pack "oj-greet"
+       * @ojmetadata dependencies {
+       *   "oj-greet-with-actions": "^1.0.0"
+       * }
+       */
+      @customElement('oj-greet-with-state-parent')
+      export class GreetWithStateParent extends Component&lt;GlobalProps, State&gt; {
+
+        state = {
+          engagement: EngagementLevel.Interested
+        }
+
+        render() {
+          const greeting = this.getGreeting();
+
+          return (
+            &lt;div&gt;
+              &lt;p&gt;This stateless child is re-rendered with new props in response to
+                parent state updates:&lt;/p&gt;
+              &lt;GreetWithActions preferredGreeting={greeting} onResponseDetected={this.handleResponse}/&gt;
+            &lt;/div&gt;
+          );
+        }
+
+        private getGreeting() {
+          let greeting;
+
+          switch(this.state.engagement) {
+            case EngagementLevel.Bored:
+              greeting = "Okay";
+              break;
+            case EngagementLevel.Impatient:
+              greeting = "Whatever";
+              break;
+            case EngagementLevel.Done:
+              greeting = "Later";
+              break;
+            default:
+              greeting = "Hello";
+              break;
+          }
+
+          return greeting;
+        }
+
+        private handleResponse = () =&gt; {
+          this.setState((state: Readonly&lt;State&gt;) =&gt; {
+            // Once we have reached the Done state, we return null
+            // to indicate that no state update is needed.
+            return state.engagement === EngagementLevel.Done ?
+              null :
+              { engagement: state.engagement + 1 };
+          });
+        }
+      }</code>
+  </pre>
+  <p>
+    In the above example, the stateless GreetWithActions child is fully
+    controlled by the GreetWithStateParent.  This gives us flexibility to
+    leverage the GreetWithActions components in other scenarios where we
+    want to present a greeting, but possibly with different response
+    behavior.
+  </p>
+  <p>
+    For example, below we use the GreetWithActions child inside a parent
+    that displays a randomly selected greeting when clicked:
+  </p>
+  <pre class="code">
+    <div class="filename">oj-greet/with-random-state-parent/with-random-state-parent.tsx:</div>
+    <code>
+      import { h, Component } from 'preact';
+      import { customElement, GlobalProps } from 'ojs/ojvcomponent';
+      import { GreetWithActions } from 'oj-greet/with-actions/loader'
+
+      type State = {
+        greeting: string;
+      };
+
+      /**
+       * @ojmetadata pack "oj-greet"
+       * @ojmetadata dependencies {
+       *   "oj-greet-with-actions": "^1.0.0"
+       * }
+       */
+      @customElement('oj-greet-with-random-state-parent')
+      export class GreetWithRandomStateParent extends Component&lt;GlobalProps, State&gt; {
+
+        private static readonly GREETINGS = [
+          "Hello", "Hey", "Hola", "Hi", "Sup"
+        ];
+
+        state = {
+          greeting: this.getRandomGreeting()
+        }
+
+        render() {
+          return (
+            &lt;div&gt;
+              &lt;p&gt;This stateless child is re-rendered with a random new greeting
+                in response to parent state updates:&lt;/p&gt;
+              &lt;GreetWithActions preferredGreeting={this.state.greeting}
+                onResponseDetected={this.handleResponse}/&gt;
+            &lt;/div&gt;
+          );
+        }
+
+        private getRandomGreeting() {
+          const greetings = GreetWithRandomStateParent.GREETINGS;
+
+          // Pick a random greeting
+          const index = Math.floor(Math.random() * greetings.length);
+          return greetings[index];
+        }
+
+        private handleResponse= () =&gt; {
+          this.setState({ greeting: this.getRandomGreeting()});
+        }
+      }</code>
+  </pre>
+  <p>
+    Try your luck by clicking on the greeting below:
+  </p>
+  <p class="output">
+    <oj-greet-with-random-state-parent></oj-greet-with-random-state-parent>
+  </p>
+
+  <oj-tutorial-next-topic
+    next-topic="[[nextTopic]]"
+    on-goto-contents="[[toggleDrawer]]">
+  </oj-tutorial-next-topic>
+
+</div>

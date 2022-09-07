@@ -1,0 +1,201 @@
+<!--
+ Copyright (c) 2014, 2022, Oracle and/or its affiliates.
+ Licensed under The Universal Permissive License (UPL), Version 1.0
+ as shown at https://oss.oracle.com/licenses/upl/
+ -->
+<!--
+ Copyright (c) 2014, 2020, Oracle and/or its affiliates.
+ Licensed under The Universal Permissive License (UPL), Version 1.0
+ as shown at https://oss.oracle.com/licenses/upl/
+ -->
+<div class="oj-hybrid-padding">
+  <h1>Children</h1>
+  <p>
+    In addition to exposing properties, components can also allow children to
+    be passed in.  With custom elements, children are specified in one of
+    two ways:
+  </p>
+  <ol>
+    <li>As direct children, with no "slot" attribute.  This is also known as the default slot.</li>
+    <li>As a named slot, with the name set via the "slot" attribute.</li>
+  </ol>
+  <p>
+    Components can leverage both of these approaches.  For example,
+    the following <a href="../../../jsdocs/oj.ojButton.html">
+    oj-button</a> is configured both with
+    <a href="../../../jsdocs/oj.ojButton.html#Default">default slot</a>
+    content as well as content in the
+    <a href="../../../jsdocs/oj.ojButton.html#startIcon">startIcon</a>
+    named slot:
+  </p>
+  <pre class="code">
+    <code>
+    &lt;oj-button&gt;
+      &lt;span&gt;This is default slot content&lt;/span&gt;
+      &lt;span slot="startIcon"&gt;This is named slot content&lt;/span&gt;
+    &lt;/oj-button&gt;</code>
+  </pre>
+  <p>
+    The VComponent API supports authoring of custom elements that expose
+    default slots, named slots, or both.
+  </p>
+  <h2>Default Slots</h2>
+  <p>
+    As we examine the VComponent API's approach to dealing with
+    children/slots, we are going to build upon a theme that we established in
+    earlier topics: the VComponent API favors the use of code
+    constructs over external metadata for defining a component's public API.
+    Rather than opening up a component.json to declare a VComponent's
+    children/slot contract through JSON metadata, we instead do the same thing
+    we did for properties: write code.
+  </p>
+  <p>
+    Just as we did with properties, we define a VComponent's children/slot
+    contract by adding fields to a "props" class.  In particular, we
+    indicate that a component can accept default slot content by declaring
+    a "children" property of type ComponentChildren:
+  </p>
+  <pre class="code">
+    <code>
+      import { h, Component, ComponentChildren } from 'preact';
+
+      type Props = {
+        preferredGreeting?: string;
+        children?: ComponentChildren;
+      }</code>
+  </pre>
+  <p>
+    And of course we also need to associate the props class with the
+    VComponent class via the P type parameter:
+  </p>
+  <pre class="code">
+    <code>
+    @customElement('oj-greet-with-children')
+    export class GreetWithChildren extends Component&lt;ExtendGlobalProps&lt;Props&gt;&gt; {
+    }</code>
+  </pre>
+  <p>
+    Once this is done, any default slot children will be made available
+    to the VComponent implementation via props.children.  This is
+    true regardless of whether the VComponent is used as a custom element
+    within an HTML document, a custom element within JSX or via the
+    VComponent's class within JSX.
+  </p>
+  <p>
+    The VComponent implementation is free to place the default slot children anywhere
+    within the component's virtual DOM tree.  For example, a
+    VComponent-based oj-button likely would place these children inside of an
+    HTML &lt;button&gt; element, eg:
+  </p>
+  <pre class="code">
+    <code>
+      protected render(props: Props) {
+        return &lt;button&gt; { props.children } &lt;/button&gt;;
+      }</code>
+  </pre>
+  <h2>Named Slots</h2>
+  <p>
+    Like the default slot, named slots are also declared as fields on the
+    props class.  Named slot declarations must adhere to two conventions:
+  </p>
+  <ul>
+    <li>The named slot field must use the
+      <a href="../../../jsdocs/ojvcomponent.html#Slot">Slot</a> type.</li>
+    <li>The name of the field must match the slot name.</li>
+  </ul>
+  <p>
+    The declaration for a slot named "startIcon" would look like this:
+  </p>
+  <pre class="code">
+    <code>
+      import { h, Component, ComponentChildren } from 'preact';
+      import { customElement, ExtendGlobalProps, Slot } from 'ojs/ojvcomponent';
+
+      type Props = {
+        preferredGreeting?: string;
+        children?: ComponentChildren;
+        startIcon?: Slot;
+      }
+
+      /**
+       * @ojmetadata pack "oj-greet"
+       */
+      @customElement('oj-greet-with-children')
+      export class GreetWithChildren extends Component&lt;ExtendGlobalProps&lt;Props&gt;&gt; {
+        render(props: ExtendGlobalProps&lt;Props&gt;) {
+          const { preferredGreeting, children, startIcon } = props;
+
+          return &lt;p class="centerAlignVertical"&gt;
+              {startIcon} {preferredGreeting}, {children}!
+            &lt;/p&gt;;
+        }
+
+        static defaultProps: Partial&lt;Props&gt; = {
+          preferredGreeting: "Hello"
+        };
+      }</code>
+  </pre>
+  <p>
+    Providing content for named slots is done in one of two ways,
+    depending on the usage:
+  </p>
+  <ul>
+    <li>When the VComponent is used as a custom element, slot
+    content is provided through child elements. The slot attribute identifies
+    the name of the slot to target. This approach is used both for custom elements
+    in HTML documents as well as for custom elements within
+    JSX markup.</li>
+    <li>When the VComponent is referenced through its class, named slot
+    content is provided by specifying virtual DOM nodes directly as values
+    for slot properties.</li>
+  </ul>
+  <p>
+    The following parent component demonstrates both of these forms:
+  </p>
+  <pre class="code">
+    <code>
+      import { h, Component } from 'preact';
+      import { customElement, GlobalProps } from 'ojs/ojvcomponent';
+      import "ojs/ojavatar";
+      import { GreetWithChildren } from 'oj-greet/with-children/loader'
+
+      /**
+       * @ojmetadata pack "oj-greet"
+       * @ojmetadata dependencies {
+       *   "oj-greet-with-children": "^1.0.0"
+       * }
+       */
+      @customElement('oj-greet-with-children-parent')
+      export class GreetWithChildrenParent extends Component&lt;GlobalProps&gt; {
+        render() {
+          return (
+            &lt;div&gt;
+              &lt;p&gt;This child is rendered as a custom element:&lt;/p&gt;
+              &lt;oj-greet-with-children&gt;
+                &lt;oj-avatar slot="startIcon" initials="HW" size="xs"&gt;&lt;/oj-avatar&gt;
+                World
+              &lt;/oj-greet-with-children&gt;
+
+              &lt;p&gt;This child is rendered as a VComponent class:&lt;/p&gt;
+              &lt;GreetWithChildren startIcon={&lt;oj-avatar initials="HW" size="xs"/&gt;}&gt;
+                World
+              &lt;/GreetWithChildren&gt;
+            &lt;/div&gt;
+          );
+        }
+      }
+      </code>
+  </pre>
+  <p>
+    The results can be seen here:
+  </p>
+  <p class="output">
+    <oj-greet-with-children-parent></oj-greet-with-children-parent>
+  </p>
+
+  <oj-tutorial-next-topic
+    next-topic="[[nextTopic]]"
+    on-goto-contents="[[toggleDrawer]]">
+  </oj-tutorial-next-topic>
+
+</div>

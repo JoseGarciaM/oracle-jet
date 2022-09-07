@@ -1,0 +1,197 @@
+<!--
+ Copyright (c) 2014, 2022, Oracle and/or its affiliates.
+ Licensed under The Universal Permissive License (UPL), Version 1.0
+ as shown at https://oss.oracle.com/licenses/upl/
+ -->
+<!--
+ Copyright (c) 2014, 2020, Oracle and/or its affiliates.
+ Licensed under The Universal Permissive License (UPL), Version 1.0
+ as shown at https://oss.oracle.com/licenses/upl/
+ -->
+<div class="oj-hybrid-padding">
+  <h1>Getting Started</h1>
+  <p>
+    This tutorial is itself a JET application that you can (and should)
+    install and run.  As you follow along with the tutorial, feel free
+    to hack away on your local copy of the app as a way to explore.
+  </p>
+  <p>
+    In order to build this app, you will need to install the ojet CLI,
+    a command line tool for creating and building JET applications and
+    components.
+  </p>
+  <p>
+    Whether or not you plan to play around with a local copy of the tutorial app,
+    now is a good time to install the ojet CLI.  You will need it sooner
+    or later, as ojet is a required tool for building VComponents.
+  </p>
+  <p>
+    Note that this doesn't mean that you must adopt ojet CLI as a tool for
+    building your own application code.  You can continue using whatever
+    build system you prefer.  However, when it comes to building VComponents,
+    you will need to delegate this bit of the build to the ojet CLI.
+  </p>
+
+  <h2> Why is an ojet build step required?</h2>
+
+  <p>
+    There are a couple of obvious reasons why some sort of build step
+    is required:
+  </p>
+    <ul>
+      <li>
+        VComponents are authored in TypeScript.  We need to compile
+        TypeScript code to ECMAScript for use in the browser.
+      </li>
+      <li>
+        VComponents leverage JSX markup.  We also need to convert this
+        to ECMAScript before it can run in the browser.
+      </li>
+    </ul>
+  <p>
+    Both of the above steps are common requirements for any TypeScript,
+    JSX-based code and can be handled with a plain old
+    TypeScript compiler build.
+  </p>
+  <p>
+    In addition to the above, we have some less obvious,
+    VComponent-specific build requirements:
+  </p>
+    <ul>
+      <li>
+        For custom element-based VComponents, we need to generate runtime
+        metadata that is used to construct the custom element. That is, we
+        need to produce sufficient information to allow the VComponent framework
+        to construct the
+        <a href="https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement">HTMLElement</a>
+        subclass that will be passed
+        to <a href="https://developer.mozilla.org/en-US/docs/Web/API/CustomElementRegistry/define">
+        customElements.define()</a>.
+      </li>
+      <li>
+        We need to generate TypeScript type definitions for the
+        (generated) custom element.
+      </li>
+      <li>
+        We need to generate metadata for tools such as
+        <a href="https://developer.oracle.com/visual-builder/">Oracle Visual Builder</a>.  In
+        particular, we need to produce a component.json file to hold
+        <a href="../../../jsdocs/MetadataOverview.html">component metadata</a>.
+      </li>
+    </ul>
+  <p>
+    The above tasks are accomplished by hooking into the TypeScript
+    <a href="https://github.com/Microsoft/TypeScript/wiki/Using-the-Compiler-API">
+    Compiler API</a>.  Rather than exposing developers to the complexities
+    of wiring this up themselves, we have encapsulated the VComponent build
+    process within the ojet CLI.
+  </p>
+
+  <h2>Installing ojet CLI</h2>
+  <p>
+    The ojet CLI is a Node-based command line tool that lives in the
+    @oracle/ojet-cli npm package.
+  </p>
+  
+  <p>
+    If you have previously installed an older version of the ojet CLI, you will want to uninstall:
+  </p>
+  <pre class="code">
+    <code>
+    $ npm uninstall -g ojet-cli
+    $ npm uninstall -g @oracle/ojet-cli</code>
+  </pre>
+  <p>
+    And then globally install the 11.0.0 (or greater) version of ojet CLI:
+  </p>
+  <pre class="code">
+    <code>
+    $ npm i -g @oracle/ojet-cli</code>
+  </pre>
+  <p>
+    At this point, ojet CLI should be installed.  You can check by running:
+  </p>
+  <pre class="code">
+    <code>
+    $ ojet --version</code>
+  </pre>
+  <p>
+    This should show the following output:
+  </p>
+  <p class="output">
+    Oracle JET Command Line Interface, version: 11.0.0
+  </p>
+
+  <h2>Building the VComponent Tutorial app</h2>
+  <p>
+    Follow these steps:
+  </p>
+  <h3>1. Download the app</h3>
+  <p>
+    The VComponent Tutorial app is located here:
+    <a href="../../JET-VComponent-Tutorial.zip">
+    JET-VComponent-Tutorial.zip</a>
+  </p>
+  <h3>2. Unzip the app</h3>
+  <p>
+    You'll want a create some directory to unzip the contents into first.
+    (The name of this directory does not matter.)
+  </p>
+  <pre class="code">
+    <code>
+    $ mkdir vcomp-tutorial-app
+    $ cd vcomp-tutorial-app
+    $ unzip &lt;path to downloads&gt;/JET-VComponent-Tutorial.zip</code>
+  </pre>
+  <p>
+    You should see the following files and subdirectories:
+  </p>
+  <pre class="code">
+    <code>
+    $ ls -1
+    oraclejetconfig.json
+    package-lock.json
+    package.json
+    scripts
+    src
+    tsconfig.json</code>
+  </pre>
+  <h3>3. Restore the app</h3>
+  <p>
+    From the root directory of the app, run:
+  </p>
+  <pre class="code">
+    <code>
+    $ ojet restore</code>
+  </pre>
+  <p>
+    This will, among other things, perform an npm install.
+  </p>
+  <h3>4. Run the app</h3>
+  <p>
+    From the root directory of the app, run:
+  </p>
+  <pre class="code">
+    <code>
+    $ ojet serve</code>
+  </pre>
+  <p>
+    This should build the app, start a server and launch a browser.
+  </p>
+  <p>
+    If all has gone according to plan, you should now see the welcome page
+    of the VComponent Tutorial in your browser.
+  </p>
+  <p>
+    The ojet serve command watches the app's src/ directory for file
+    modifications.  Try hacking on some content (eg.
+    on src/ts/views/welcome.html) and verify that your browser
+    automatically reloads with your changes.
+  </p>
+
+  <oj-tutorial-next-topic
+    next-topic="[[nextTopic]]"
+    on-goto-contents="[[toggleDrawer]]">
+  </oj-tutorial-next-topic>
+
+</div>

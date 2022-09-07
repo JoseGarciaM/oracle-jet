@@ -1,0 +1,305 @@
+<!--
+ Copyright (c) 2014, 2022, Oracle and/or its affiliates.
+ Licensed under The Universal Permissive License (UPL), Version 1.0
+ as shown at https://oss.oracle.com/licenses/upl/
+ -->
+<!--
+ Copyright (c) 2014, 2020, Oracle and/or its affiliates.
+ Licensed under The Universal Permissive License (UPL), Version 1.0
+ as shown at https://oss.oracle.com/licenses/upl/
+ -->
+ <div class="oj-hybrid-padding">
+  <h1>Properties</h1>
+  <h2>Declaring Properties</h2>
+  <p>
+    So far we have seen two VComponents: GreetHello and GreetHelloParent.
+    Let's face it: these components are pretty boring.  They are missing
+    one very fundamental piece that we expect to encounter in most
+    component APIs: properties!
+  </p>
+  <p>
+    Let's add one.
+  </p>
+  <p>
+    Over on the composite component side of things, the process of adding
+    a property starts with writing some JSON metadata.  For example,
+    if we wanted to add a "preferredGreeting" property to a traditional composite
+    component, we would open up the component.json file and add an
+    entry along these lines:
+  </p>
+  <pre class="code">
+    <code>
+  "properties": {
+    "preferredGreeting": {
+      "type": "string",
+      "value": "Hello"
+    }
+  }</code>
+  </pre>
+  <p>
+    We would then reference this property from the composite component's
+    view template and possible view model as needed.
+  </p>
+  <p>
+    With VComponents, adding a property starts with... writing code rather than
+    JSON.  Yay!
+  </p>
+  <p>
+    Here is a revised version of our greeting component, now with a
+    "preferredGreeting" property:
+  </p>
+  <pre class="code">
+    <div class="filename">oj-greet/with-props/with-props.tsx:</div>
+    <code>
+      1     import { h, Component } from 'preact';
+      2     import { customElement, ExtendGlobalProps } from 'ojs/ojvcomponent';
+      3
+      4     type Props = {
+      5       preferredGreeting?: string;
+      6     }
+      7
+      8     /**
+      9      * @ojmetadata pack "oj-greet"
+      10     */
+      11    @customElement('oj-greet-with-props')
+      12    export class GreetWithProps extends Component&lt;ExtendGlobalProps&lt;Props&gt;&gt; {
+      13
+      14      render(props: Props) {
+      15        const greeting = props.preferredGreeting;
+      16
+      17        return &lt;p&gt;{ greeting }, World!&lt;/p&gt;;
+      18      }
+      19
+      20      static defaultProps: Partial&lt;Props&gt; = {
+      21        preferredGreeting: "Hello"
+      22      };
+      23    }</code>
+  </pre>
+  <p>
+    As shown at line 4 above, a VComponent's properties are declared
+    via a type alias.  By convention, we name this type "Props", though any
+    name will do.  Each field in the type represents a single, public component
+    property.  Fields are used to specify the property's name, type, and whether
+    the a value for the field is optional or required.  Default values are specified
+    in the static defaultProps field on the component class, as seen at line 20.
+  </p>
+  <p>
+    In this case, we have declared a single "preferredGreeting" property
+    of type string with the default value "Hello".  We mark the property as optional
+    using TypeScript's optional ("?") indicator.
+  </p>
+  <p>
+    There is one subtle requirement that may be easy to miss:
+    in order to associate the properties class with the VComponent
+    implementation, we need to specify the class as the value of the
+    VComponent's first type parameter, "P".  This is shown at line 12.  Note
+    that we use the <a href="../../../jsdocs/ojvcomponent.html#ExtendGlobalProps">
+    ExtendGlobalProps</a> utility type to merge the component's own properties
+    with the global HTML attributes defined by
+    <a href="../../../jsdocs/ojvcomponent.html#GlobalProps">GlobalProps</a>.
+  </p>
+  <h2>Accessing Properties</h2>
+  <p>
+    Any properties that we have declared are made available for use
+    by the VComponent implementation through a special object:
+    this.props.  In addition, properties are passed into the render method
+    as the first argument. We can see an example of this usage at line #15,
+    where we extract the value of the "preferredGreeting" property into
+    a variable.  This variable subsequently influences the state
+    of the rendered virtual DOM tree.  We embed the value of the
+    preferredGreeting property into the virtual DOM at line #17.
+  </p>
+  <p>
+    One critical point to keep in mind is that the property values
+    in the props object are <b>always</b> defined by the consumer of the
+    VComponent.  In the HTML case, the props object is populated based on
+    attribute/property values specified on the custom element by
+    the application.  In the case where the VComponent is being
+    used within a parent VComponent, the property values are
+    provided by the parent VComponent.  A VComponent implementation
+    can read these property values, but must never mutate the
+    props object.
+  </p>
+  <h2>HTML Usage</h2>
+  <p>
+    VComponents are embedded into HTML documents (eg. into an index.html
+    file or a composite component or oj-module view template) using the
+    custom element form.  The markup might look like this:
+  </p>
+  <pre class="code">
+    <code>
+      &lt;oj-greet-with-props preferred-greeting="Hi"&gt;&lt;/oj-greet-with-props&gt;</code>
+  </pre>
+  <p>
+    Which produces the following output:
+  </p>
+  <div class="output">
+    <oj-greet-with-props preferred-greeting="Hi"></oj-greet-with-props>
+  </div>
+  <p>
+    Note that when embedding a VComponent custom element in an HTML document
+    or template, we use the same attribute naming
+    rules as we use for all other JET custom elements: multi-word properties
+    (eg. "preferredGreeting") are specified using hyphen-separated, kebab-case
+    attribute names (eg. "preferred-greeting").  All of the usual
+    <a href="../../../jsdocs/CustomElementOverview.html">
+    JET Web Component conventions</a> for
+    <a href="../../../jsdocs/CustomElementOverview.html#ce-attributes-section">
+    attribute usage</a> apply.
+  </p>
+  <h2>JSX Usage</h2>
+  <p>
+    VComponents can also be embedded inside of other parent VComponents.
+    As we saw in the
+    <oj-tutorial-topic-link topic="[[ getTopic('nesting')]]">
+    </oj-tutorial-topic-link> topic,
+    a VComponent parent can refer to a child in two different forms:
+  </p>
+    <ol>
+      <li>As a custom element, using the string tag name.</li>
+      <li>As a VComponent, using the Preact component class.</li>
+    </ol>
+  <p>
+    Inside of JSX, we use the same naming convention for both of these forms:
+    we always specify component properties using their camelCase property names.
+  </p>
+  <p>
+    Here is a revised version of our parent greeting VComponent that
+    demonstrates this:
+  </p>
+  <pre class="code">
+    <div class="filename">oj-greet/with-props-parent/with-props-parent.tsx:</div>
+    <code>
+      1    import { h, Component } from 'preact';
+      2    import { customElement, GlobalProps } from 'ojs/ojvcomponent';
+      3    import { GreetWithProps } from 'oj-greet/with-props/loader'
+      4
+      5    /**
+      6     * @ojmetadata pack "oj-greet"
+      7     * @ojmetadata dependencies {
+      8     *   "oj-greet-with-props": "^1.0.0"
+      9     * }
+      10     */
+      11    @customElement('oj-greet-with-props-parent')
+      12    export class GreetWithPropsParent extends Component&lt;GlobalProps&gt; {
+      13      render() {
+      14        return (
+      15          &lt;div&gt;
+      16            &lt;p&gt;This child is rendered as a custom element:&lt;/p&gt;
+      17            &lt;oj-greet-with-props preferredGreeting="Hey there"/&gt;
+      18
+      19            &lt;p&gt;This child is rendered as a VComponent class:&lt;/p&gt;
+      20            &lt;GreetWithProps preferredGreeting="Hola"/&gt;
+      21          &lt;/div&gt;
+      22        );
+      23      }
+      24    }
+      </code>
+  </pre>
+  <p>
+    Note that for both the custom element case (line 17) and the
+    VComponent class case (line 20), we use the "preferredGreeting"
+    property name, not the "preferred-greeting" attribute name.
+  </p>
+  <p>
+    Although the use of different naming conventions between
+    HTML and JSX markup may be confusing at first, there is an
+    important rationale for sticking with property names within
+    JSX: type checking.  When specifying a JSX element like this:
+  </p>
+  <pre class="code">
+    <code>
+    &lt;oj-greet-with-props preferredGreeting="Hey there"/&gt;</code>
+  </pre>
+  <p>
+    Or this:
+  </p>
+  <pre class="code">
+    <code>
+    &lt;GreetWithProps preferredGreeting="Hola"/&gt;</code>
+  </pre>
+  <p>
+    The properties on each JSX element are used to
+    populate a "props" object that eventually ends up populating
+    the child component's this.props field.  The type of this
+    props object is based on the child VComponent's props type parameter.
+    By sticking with the property names as declared by the
+    VComponent's props type, we are able to type check (and catch
+    errors in) the parent component's JSX.
+  </p>
+  <h2>Global HTML Attributes</h2>
+  <p>
+    In the above section, we discussed the naming convention to use
+    when referencing component properties from within JSX: always
+    use the component (camelCased) property name.   Ideally, we would
+    like to use the same simple convention for global HTML attributes,
+    such as "id" or "tabIndex". One problem with this approach is that
+    not all global HTML attributes are exposed as properties.  For example,
+    aria- and data- attributes do not have property equivalents.
+  </p>
+  <p>
+    This leads to the following rules for working with global HTML
+    properties/attributes:
+  </p>
+    <ul>
+      <li>
+        If the global HTML attribute is available as a property, use the
+        property name.
+      </li>
+      <li>
+        If the global HTML attribute is not available as a property,
+        use the attribute name.
+      </li>
+    </ul>
+  <p>
+    In many cases, global HTML attribute names are identical to the property
+    name (eg. "id", "title", "style").  However, there are some cases where
+    the attribute and property name differ, or where the property name requires
+    a specific case-folding.  For example, since attributes are case insensitive,
+    HTML allows any capitalization of the "tabindex" attribute.  In JSX, we
+    require that the actual property name "tabIndex" is used:
+  </p>
+  <pre class="code">
+    <code>
+      protected render() {
+        // While "tabindex" is a valid way to specify the tab index
+        // in an HTML document, in JSX, the property name "tabIndex"
+        // must be used.
+        return &lt;div tabIndex={0} /&gt;
+      }</code>
+  </pre>
+  <p>
+    There is one noteworthy exception to the above rule.  Although
+    the property name for specifying style classes is
+    "className", this name is not especially well known.  Preact
+    allows use of the more familiar attribute name, "class", eg:
+  </p>
+  <pre class="code">
+    <code>
+      protected render() {
+        // Can use "class" instead of "className"
+        return &lt;div class="awesome-class" /&gt;
+      }</code>
+  </pre>
+  <h2>ObservedGlobalProps</h2>
+  <p>
+    As discussed previously, all VComponents minimally support the set of global HTML attributes/properties
+    defined by the GlobalProps/ExtendGlobalProps types. This means that consumers of your VComponent (whether
+    they use the custom element tag or the VComponent class) can specify these global properties in their code.
+  </p>
+  <p>
+    In some cases, the VComponent implementation may need to inspect the value of a global property and to observe changes
+    to that global property that would cause the VComponent to re-render itself. For these use cases, VComponents can express interest in specific
+    global properties via the <a href="../../../jsdocs/ojvcomponent.html#ObservedGlobalProps">
+    ObservedGlobalProps</a> utility type. This type allows specific global properties to be selected for observation via a type parameter.
+    This ObservedGlobalProps type is combined with the component's other properties as part of the property declaration. We will see an
+    example of ObservedGlobalProps in action in the <oj-tutorial-topic-link topic="[[ getTopic('unique-ids')]]"></oj-tutorial-topic-link>
+    topic, later in the tutorial.
+  </p>
+
+  <oj-tutorial-next-topic
+    next-topic="[[nextTopic]]"
+    on-goto-contents="[[toggleDrawer]]">
+  </oj-tutorial-next-topic>
+
+</div>

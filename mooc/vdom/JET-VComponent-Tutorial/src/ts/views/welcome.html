@@ -1,0 +1,136 @@
+<!--
+ Copyright (c) 2014, 2022, Oracle and/or its affiliates.
+ Licensed under The Universal Permissive License (UPL), Version 1.0
+ as shown at https://oss.oracle.com/licenses/upl/
+ -->
+<!--
+ Copyright (c) 2014, 2020, Oracle and/or its affiliates.
+ Licensed under The Universal Permissive License (UPL), Version 1.0
+ as shown at https://oss.oracle.com/licenses/upl/
+ -->
+<div class="oj-hybrid-padding">
+  <h1>Welcome to VComponents!</h1>
+  <p>
+    The 11.0.0 release of JET introduces a new solution for creating
+    <a href="../../../jsdocs/CompositeOverview.html">
+    JET Custom Components</a>: the
+    <a href="../../../jsdocs/ojvcomponent.html">VComponent API</a>.
+  </p>
+  <p>
+    As with JET's <a href="https://blogs.oracle.com/groundside/cca">
+    Composite Component Architecture</a>, VComponents provide an easy way for developers
+    to author their own <a href="https://www.webcomponents.org/introduction">Web Components</a>.
+    VComponents differ from composite components in one key way:
+    VComponents leverage <a href="https://bitsofco.de/understanding-the-virtual-dom/">virtual DOM</a>
+    rendering and <a href="https://preactjs.com/">Preact</a> rather than
+    <a href="https://knockoutjs.com/">Knockout</a>-based templates to produce
+    their content.  As we will see, this has implications for how VComponents are
+    authored and used.
+  </p>
+  <p>
+    This tutorial provides an introduction to the new Preact-based VComponent API.  It is
+    not intended to be a comprehensive guide to every aspect of VComponents.
+    Instead, the goal of this tutorial is to help onboard new VComponent
+    authors.  By the end of this tutorial, you should be able to create
+    your own VComponents and incorporate these into your JET-based projects.
+  </p>
+
+  <p>
+    One important thing to note before we dive in: while we are
+    very excited about the VComponent API, we consider this to
+    be an incremental addition rather than revolutionary change to the JET architecture.
+    VComponents are designed to work seamlessly with existing JET applications. There
+    is no need to rewrite your existing JET applications in order to
+    start using VComponents.  VComponents can happily coexist with other
+    JET components.  This tutorial is itself a demonstration of this
+    principle, as it is a plain old JET app with some VComponents sprinkled
+    throughout.
+  </p>
+  <p>
+    The same goes for your existing composite component-based
+    JET Custom Components.  If you are happy building on top of the
+    Composite Component Architecture, there is no reason for you to
+    disrupt your development plans.  The Composite Component Architecture
+    is not going away.  We feel that both composite components and VComponents
+    are excellent options for component authoring.  You are free to pick
+    whichever approach best meets your team's skill set and preferences.
+  </p>
+  <h2>Prerequisites</h2>
+  <p>
+    The VComponent API builds on top of a number of technologies.  In
+    addition to a general understanding of
+    <a href="https://bitsofco.de/understanding-the-virtual-dom/">
+    virtual DOM</a>, VComponent
+    authors will need to be familiar with the following:
+  </p>
+    <ul>
+      <li>
+        <a href="https://preactjs.com/">Preact</a>: Implementing
+        a VComponent requires direct use Preact APIs.  Getting to know
+        Preact is a good place to start.
+      </li>
+      <li>
+            <a href="https://www.typescriptlang.org/index.html">TypeScript</a>:
+	    All VComponents are authored in TypeScript.  Static types
+            are your friends!
+      </li>
+      <li>
+            <a href="https://facebook.github.io/jsx/">JSX</a>: JSX defines a
+	    mechanism for embedding markup content inside of
+            ECMAScript. JSX can also be placed
+	    <a href="https://www.typescriptlang.org/docs/handbook/jsx.html">
+	    inside of TypeScript</a> code as well.
+      </li>
+      <li>
+            <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules">
+	    ECMAScript modules</a>
+	    (and <a href="https://www.typescriptlang.org/docs/handbook/modules.html">
+	    TypeScript modules</a>): VComponents are authored
+            using ECMAScript-style imports/exports.
+      </li>
+      <li>
+            <a href="https://www.typescriptlang.org/docs/handbook/decorators.html">
+	    TypeScript decorators</a>: the VComponent API uses decorators to express
+            information and behavior that would otherwise be difficult to express
+            via code.
+      </li>
+      <li>
+            <a href="https://github.com/oracle/ojet-cli">ojet CLI</a>:
+	    we will use this command line tool to build our VComponents.
+      </li>
+      <li>
+            <a href="https://requirejs.org/docs/whyamd.html#amd">
+	      AMD</a>: Although VComponents are authored as ECMAScript
+	      modules, ojet CLI transpiles these to AMD for runtime usage.
+      </li>
+    </ul>
+  <p>
+    In addition to the above, there are a few tangential subjects that
+    will likely be of interest to VComponent authors:
+  </p>
+    <ul>
+      <li>
+            <a href="https://blogs.oracle.com/groundside/cca">
+	    Composite Component Architecture</a>: while it is not a requirement
+	    to master composite components, developers that are familiar with
+	    composite components will see conceptual (and practical)
+	    connections to the VComponent API.
+      </li>
+      <li>
+            <a href="https://blogs.oracle.com/groundside/advanced-components-jet-packs-part-1">
+      JET Packs</a>: we expect that VComponent authors will typically create multiple, related
+      VComponents, and as such will want to package these into JET Packs.
+      </li>
+      
+      <li>
+            <a href="https://developer.oracle.com/visual-builder/">
+	      Oracle Visual Builder</a>: whether or not your own application is built using
+        Visual Builder, Visual Builder users can import your JET Custom Components
+        (including VComponents) into their applications.
+      </li>
+    </ul>
+  <oj-tutorial-next-topic
+    next-topic="[[nextTopic]]"
+    on-goto-contents="[[toggleDrawer]]">
+  </oj-tutorial-next-topic>
+</div>

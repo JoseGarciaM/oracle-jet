@@ -1,0 +1,1 @@
+export { GreetWithActionsParent } from  "./with-actions-parent";

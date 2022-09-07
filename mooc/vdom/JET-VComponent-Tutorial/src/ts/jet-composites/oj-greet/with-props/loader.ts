@@ -1,0 +1,1 @@
+export { GreetWithProps } from  "./with-props";

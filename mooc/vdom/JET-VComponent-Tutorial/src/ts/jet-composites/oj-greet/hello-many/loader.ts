@@ -1,0 +1,1 @@
+export { GreetHelloMany, GreetingContext } from  "./hello-many";

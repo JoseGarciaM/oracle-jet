@@ -72,3 +72,5 @@ Component testing often involves mounting the component being tested in isolatio
 - We must have a JET official low-level component testing library that needs to be written to provide users access to JET specific APIs.
 
 I recommend using a npm package for testing components in applications, as its focus aligns better with the testing priorities of applications.
+
+- oracle web driver

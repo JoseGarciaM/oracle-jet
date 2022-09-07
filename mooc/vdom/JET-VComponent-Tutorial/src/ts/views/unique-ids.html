@@ -1,0 +1,182 @@
+<!--
+ Copyright (c) 2014, 2022, Oracle and/or its affiliates.
+ Licensed under The Universal Permissive License (UPL), Version 1.0
+ as shown at https://oss.oracle.com/licenses/upl/
+ -->
+<!--
+ Copyright (c) 2014, 2020, Oracle and/or its affiliates.
+ Licensed under The Universal Permissive License (UPL), Version 1.0
+ as shown at https://oss.oracle.com/licenses/upl/
+ -->
+<div class="oj-hybrid-padding">
+  <h1>Unique Ids</h1>
+  <p>
+    In some cases it may be necessary to assign ids to the elements
+    rendered by a component.  For example, this may be necessary to
+    correlate between a label and an input control.  Specifying
+    static ids can be problematic:
+  </p>
+  <pre class="code">
+    <code>
+      render() {
+        return (
+          &lt;div&gt;
+
+            // Don't do this:
+            &lt;oj-label for="input"&gt;Label&lt;/oj-label&gt;
+            &lt;oj-input-text id="input " value="Value"/&gt;
+          &lt;/div&gt;
+        );
+      }</code>
+  </pre>
+  <p>
+    Static ids may conflict with other ids on the page,
+    including when multiple instances of the component are present.
+  </p>
+  <p>
+    To reduce the chances of collision, one option might be to
+    combine a static id with the component's own id, eg:
+  </p>
+  <pre class="code">
+    <code>
+      render(props) {
+
+        // Don't do this either, unless id is required for your component
+        const inputTextId = `${ props.id }_input`;
+
+        return (
+          &lt;div&gt;
+            &lt;oj-label for={ inputTextId }&gt;Label&lt;/oj-label&gt;
+            &lt;oj-input-text id={ inputTextId } value="Value"/&gt;
+          &lt;/div&gt;
+        );
+      }</code>
+    </pre>
+  <p>
+    The problem with this approach is that id is not typically a
+    required property.  In the absence of a props.id value, the
+    resulting combined id will not be unique.
+  </p>
+  <p>
+    The VComponent API includes a trivial, counter-based API that
+    helps with unique id generation:
+    <a href="../../../jsdocs/ojvcomponent.html#getUniqueId">getUniqueId()</a>.
+    getUniqueId simply coughs up a new id each time it is called.  Combining
+    this with some static id can help to ensure
+    that no two elements on the page will share the same id.
+  </p>
+  <p>
+    To avoid generating a new id on each render, a VComponent can
+    retrieve a unique id at construction time and store it away
+    for later use.
+  </p>
+  <p>
+    Here is a typical usage pattern:
+  </p>
+  <pre class="code">
+    <code>
+      import { h, Component } from 'preact';
+      import { customElement, ExtendGlobalProps, ObservedGlobalProps, getUniqueId } from 'ojs/ojvcomponent';
+      import "ojs/ojinputtext";
+      import "ojs/ojlabel";
+
+      export type Props = {
+        defValue?: string;
+      } & ObservedGlobalProps&lt;'id'&gt;;
+
+      @customElement('oj-demo-unique-id')
+      export class DemoUniqueId extends Component&lt;ExtendGlobalProps&lt;Props&gt;&gt; {
+
+        private uniquePrefix: string;
+
+        constructor(props: Readonly&lt;Props&gt;) {
+          super(props)
+
+          this.uniquePrefix = props.id ?? getUniqueId();
+        }
+
+        static defaultProps: Partial&lt;Props&gt; = {
+          defValue: "Value"
+        };
+        
+        render(props: Readonly&lt;Props&gt;) {
+
+          const inputTextId = `${this.uniquePrefix}_input`;
+
+          return (
+            &lt;div&gt;
+              &lt;oj-label for={ inputTextId }&gt;Label&lt;/oj-label&gt;
+              &lt;oj-input-text id={ inputTextId } value={ props.defValue }/&gt;
+            &lt;/div&gt;
+          );
+        }
+      }
+    </code>
+  </pre>
+  <p>
+    When we render the above component two times, like this:
+  </p>
+  <pre class="code">
+    <code>
+      &lt;oj-demo-unique-id&gt;&lt;/oj-demo-unique-id&gt;
+      &lt;oj-demo-unique-id&gt;&lt;/oj-demo-unique-id&gt;
+      </code>
+  </pre>
+  <p>
+    We end up with the following content, where each oj-input-text element has
+    a unique id:
+  </p>
+  <p class="output">
+    <oj-demo-unique-id></oj-demo-unique-id>
+    <oj-demo-unique-id></oj-demo-unique-id>
+  </p>
+  <p>
+    (You can use the browser developer tools to peek at the generated ids.)
+  </p>
+  <p>
+    Note that this logic:
+  </p>
+  <pre class="code">
+    <code>
+      this.uniquePrefix = props.id ?? getUniqueId();</code>
+  </pre>
+  <p>
+    Indicates that if the component itself already has an id, this
+    will be used as the preferred prefix.
+  </p>
+  <p>
+    One other subtle piece of this solution is:
+  </p>
+  <pre class="code">
+    <code>
+      export type Props = {
+        defValue?: string;
+      } & ObservedGlobalProps&lt;'id'&gt;;
+    </code>
+  </pre>
+  <p>
+    Normally, a VComponent-based custom element will listen for
+    attribute changes for all component-specific properties, but not
+    for global HTML attributes such as id or tabIndex.  In this case,
+    since our rendered output depends on the value of the HTML id
+    attribute, we need to register our interest in this attribute by
+    including the
+    <a href="../../../jsdocs/ojvcomponent.html#ObservedGlobalProps">ObservedGlobalProps</a>
+    utility type in our Props type.
+    As a result, if the application sets a new value for the id attribute on the
+    custom element, this will trigger a re-render of the VComponent
+    with the new value.
+  </p>
+  <p>
+    One last note on getUniqueId(): the values produced by this
+    method are not guaranteed to be stable and can change over time.
+    As such, ids generated with the help of getUniqueId should never
+    appear in test scripts, or otherwise referenced outside of the
+    component that generates the id.
+  </p>
+  <oj-tutorial-next-topic
+    next-topic="[[nextTopic]]"
+    on-goto-contents="[[toggleDrawer]]">
+  </oj-tutorial-next-topic>
+
+</div>

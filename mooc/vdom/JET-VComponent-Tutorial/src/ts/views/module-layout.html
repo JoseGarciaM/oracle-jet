@@ -1,0 +1,192 @@
+<!--
+ Copyright (c) 2014, 2022, Oracle and/or its affiliates.
+ Licensed under The Universal Permissive License (UPL), Version 1.0
+ as shown at https://oss.oracle.com/licenses/upl/
+ -->
+<!--
+ Copyright (c) 2014, 2020, Oracle and/or its affiliates.
+ Licensed under The Universal Permissive License (UPL), Version 1.0
+ as shown at https://oss.oracle.com/licenses/upl/
+ -->
+<div class="oj-hybrid-padding">
+  <h1>Module Layout</h1>
+  <p>
+    As we saw in the previous topic, each custom element-based VComponent
+    requires a bonus loader.ts module.  But where do VComponent modules
+    and their loader counterparts live?
+  </p>
+  <p>
+    Since we will be using the
+    <a href="https://github.com/oracle/ojet-cli">ojet CLI</a> to build our
+    VComponents, we need to play by ojet CLI's rules.  ojet supports custom
+    components in two
+    forms:
+  </p>
+    <ol>
+      <li>Independent, loose components</li>
+      <li>Components which are members of a
+      <a href="https://blogs.oracle.com/groundside/advanced-components-jet-packs-part-1">JET Pack</a></li>
+    </ol>
+  <p>
+    The JET Pack approach is very much our preferred solution.  If you are
+    developing/delivering more than one custom element-based component, placing
+    your components in a JET Pack is without a doubt the way to go.
+  </p>
+  <p>
+    Whether you are planning to develop loose or JET Packed components
+    you will need to follow ojet's conventions for where components
+    live and how they should be structured.  We explore these conventions
+    in the sections below.
+  </p>
+  <h2>Loose Components</h2>
+  <p>
+    All custom components (both composite
+    and VComponents, loose and JET Pack'ed) must be placed under a well known
+    directory.  As with most of the standard directories in an ojet app, the
+    name of this directory is configurable.  By default the
+    parent directory for custom components is named "jet-composites".
+  </p>
+  <p>
+    For TypeScript-based applications (ie. for any
+    application that contains VComponents), the jet-composites directory
+    can be found at "src/ts/jet-composites".
+  </p>
+  <p>
+    Since each custom element-based component has a module named "loader.ts",
+    in order to avoid name conflicts we must place components in their own
+    subdirectories under src/ts/jet-composites.  For loose components,
+    the name of this subdirectory matches the component's custom element tag name.
+  </p>
+  <p>
+    So, for example, our HelloWorld VComponent, which defines the "oj-hello-world"
+    custom element tag, lives in the "src/ts/jet/composites/oj-hello-world"
+    directory.
+  </p>
+  <p>
+    For loose VComponents, the VComponent module name matches the custom element
+    tag name with the ".tsx" extension tacked on.
+  </p>
+  <p>
+    Putting the above rules together, we end up with the following
+    directory structure for our sample HelloWorld component:
+  </p>
+  <pre class="code">
+    <code>
+  src/
+    ts/
+      jet-composites/
+        oj-hello-world/
+          loader.js
+          oj-hello-world.tsx</code>
+  </pre>
+  <p>
+    You can check this out for yourself by downloading and unzipping
+    the
+    <a href="../../JET-VComponent-Tutorial.zip">
+      VComponent Tutorial app</a>, which contains all
+    of the content that you are reading, including all of the oj-sample
+    VComponent implementations.
+  </p>
+  <h2>JET Pack Components</h2>
+  <p>
+    Components that live in JET Packs follow slightly different conventions.
+    Each JET Pack has a name that is used as a prefix for its member
+    components.  For example, the "oj-sample" JET Pack is a collection of
+    sample components that are provided by the JET team.  The components
+    in this JET Pack all have custom element tag names that are prefixed
+    with "oj-sample", such as "oj-sample-calendar" or "oj-sample-drawer".
+  </p>
+  <p>
+    Rather than living in sub-directories directly under the jet-composites
+    directory, JET Pack'ed components live in sub-directories under
+    a directory named after the JET Pack.  The component-specific sub-directory
+    as well as the component module omit the JET Pack prefix from their names.
+  </p>
+  <p>
+    For example, if we port our "oj-hello-world" component over to an
+    "oj-greet-hello" component which is a member of the (new) "oj-greet"
+    JET Pack, this would have the following directory layout:
+  </p>
+  <pre class="code">
+    <code>
+  src/
+    ts/
+      jet-composites/
+        oj-greet/
+          hello/
+            loader.js
+            hello.tsx</code>
+  </pre>
+  <p>
+    The import is also changed accordingly.  Rather than an import of the form:
+  </p>
+  <pre class="code">
+    <code>
+      import "oj-hello-world/loader";</code>
+  </pre>
+  <p>
+    The JET Pack version looks like:
+  </p>
+  <pre class="code">
+    <code>
+      import "oj-greet/hello/loader";</code>
+  </pre>
+  <h3>Managing JET Packs With ojet CLI</h3>
+  <p>
+    When working with JET Packs, there are some additional requirements that
+    must be met.  These include:
+  </p>
+  <ul>
+    <li>The JET Pack directory must contain a component.json metadata file that describes
+      the contents of the JET Pack.  (See
+      <a href="../../../jsdocs/ComponentPackOverview.html">
+        JET Pack Metadata</a>.)
+    </li>
+    <li>Each component that is a member of the JET Pack must be specified in the component.json
+      "dependencies" section.
+    </li>
+    <li>The path to JET Pack directory must be defined in the application's tsconfig.json.</li>
+    <li>Each VComponent module must specify the name of the parent JET Pack via a jsDoc annotation.
+      (More on this in the
+      <oj-tutorial-topic-link topic="[[ getTopic('metadata')]]">
+      </oj-tutorial-topic-link> topic.)
+    </li>
+  </ul>
+  <p>
+    Rather than creating and configuring JET Packs and their contents manually,
+    a better option is to let the ojet CLI help with this work.
+  </p>
+  <p>
+    Creating a new JET Pack is as simple as:
+  </p>
+  <pre class="code">
+    <code>
+      $ ojet create pack &lt;pack name&gt;</code>
+  </pre>
+  <p>
+    And adding a new VComponent to a JET Pack can be done with:
+  </p>
+  <pre class="code">
+    <code>
+      $ ojet create component &lt;component name&gt; --pack=&lt;pack name&gt; --vcomponent</code>
+  </pre>
+  <p>
+    Using the above commands, creating a new oj-greet-hello VComponent
+    could be accomplished with two commands:
+  </p>
+  <pre class="code">
+    <code>
+      $ ojet create pack oj-greet
+      $ ojet create component hello --pack=oj-greet --vcomponent</code>
+  </pre>
+  <p>
+    This creates the oj-greet JET Pack and adds the oj-greet-hello VComponent, without
+    having to worry about the directory structure or configuration details.
+  </p>
+
+  <oj-tutorial-next-topic
+    next-topic="[[nextTopic]]"
+    on-goto-contents="[[toggleDrawer]]">
+  </oj-tutorial-next-topic>
+
+</div>
